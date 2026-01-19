@@ -1,20 +1,17 @@
-// idt1/src/pages/Landing/Landing.jsx
-import { Button, Container, Typography } from "@mui/material";
+import Hero from "./sections/Hero";
+import Feature from "./sections/Feature";
+import Project from "./sections/Project";
+import Pricing from "./sections/Pricing";
+import CTA from "./sections/CTA";
 
 export default function Landing() {
   return (
-    <Container sx={{ py: 10, textAlign: "center" }}>
-      <Typography variant="h3" fontWeight="bold">
-        Idea Trade
-      </Typography>
-
-      <Typography sx={{ mt: 2, color: "text.secondary" }}>
-        Special features for our customers
-      </Typography>
-
-      <Button variant="contained" sx={{ mt: 4 }}>
-        Try Free Tools
-      </Button>
-    </Container>
+        <section>
+              <Hero />
+              <Feature />
+              <Project />
+              <Pricing />
+              <CTA />
+        </section>
   );
 }

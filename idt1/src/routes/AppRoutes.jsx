@@ -17,7 +17,7 @@ export default function AppRoutes() {
       <Route path="/member-register" element={<MemberRegister />} />
 
       {/* 🔐 Protected */}
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/landing" element={<Landing />} />
     </Routes>
   );
 }
