@@ -4,7 +4,10 @@ import logo from "@/assets/images/logo.png";
 
 export default function Welcome() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [remember, setRemember] = useState(false);
   const [openForgot, setOpenForgot] = useState(false);
+  const [popupType, setPopupType] = useState(""); 
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-700">
@@ -32,21 +35,14 @@ export default function Welcome() {
             {/* Email */}
             <div className="relative w-full">
             <input
-              type="email"
-              placeholder=" "
-              className="
-                peer
-                w-full
-                bg-transparent
-                border border-blue-300/40
-                rounded-md
-                px-4 py-3
-                text-white
-                focus:border-blue-500
-                outline-none
-              "
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder=" "
+            className="peer w-full bg-transparent border border-blue-300/40
+                      rounded-md px-4 py-3 text-white
+                      focus:border-blue-500 outline-none"
             />
-
             <label
               className="
                 absolute left-4 top-3
@@ -74,12 +70,18 @@ export default function Welcome() {
             {/* Options */}
             <div className="flex justify-between items-center text-sm">
               <label className="flex items-center gap-2">
-                <input type="checkbox" />
+                <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
                 Remember me
               </label>
-
               <span
-                onClick={() => setOpenForgot(true)}
+                onClick={() => {
+                  setPopupType("forgot");
+                  setOpenForgot(true);
+                }}
                 className="text-white cursor-pointer hover:underline"
               >
                 Forgot password
@@ -88,7 +90,15 @@ export default function Welcome() {
 
             {/* Sign in */}
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => {
+                if (!email) {
+                  setPopupType("emailRequired");
+                  setOpenForgot(true);
+                  return;
+                }
+
+                navigate("/dashboard");
+              }}
               className="mt-2 py-3 rounded-lg bg-sky-600 text-lg font-semibold"
             >
               Sign in
@@ -132,36 +142,61 @@ export default function Welcome() {
 
       {/* ================= POPUP ================= */}
       {openForgot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay */}
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setOpenForgot(false)}
-          />
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    {/* Overlay */}
+    <div
+      className="absolute inset-0 bg-black/60"
+      onClick={() => setOpenForgot(false)}
+    />
 
-          {/* Modal */}
-          <div className="relative z-10 w-full max-w-md rounded-2xl
-                          bg-slate-800 text-white p-6 shadow-xl">
-            <h3 className="text-xl font-semibold mb-2">
-              Forgot Password
-            </h3>
+    {/* Modal */}
+    <div className="relative z-10 w-full max-w-md rounded-2xl
+                    bg-slate-800 text-white p-6 shadow-xl">
 
-            <p className="text-sm text-gray-300 mb-5">
-              ระบบกู้คืนรหัสผ่านจะเปิดให้ใช้งานเร็ว ๆ นี้  
-              กรุณาติดต่อผู้ดูแลระบบ
-            </p>
+      {popupType === "forgot" && (
+        <>
+          <h3 className="text-xl font-semibold mb-2">
+            Forget your ID or password?
+          </h3>
 
-            <div className="flex justify-end">
-              <button
-                onClick={() => setOpenForgot(false)}
-                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+          <p className="text-sm text-gray-300 mb-5">
+            <br />
+            Your ID is:{" "}
+            <span className="font-semibold text-sky-600">
+              your Email address.
+            </span>
+            <br />
+            Your Password is:{" "}
+            <span className="font-semibold text-sky-600">
+              your Phone number.
+            </span>
+          </p>
+        </>
       )}
+
+      {popupType === "emailRequired" && (
+        <>
+          <h3 className="text-xl font-semibold mb-2 text-red-400">
+            กรุณาใส่อีเมลก่อน
+          </h3>
+
+          <p className="text-sm text-gray-300 mb-5">
+            โปรดกรอกอีเมลของคุณก่อนทำการ Sign in
+          </p>
+        </>
+      )}
+
+      <div className="flex justify-end">
+        <button
+          onClick={() => setOpenForgot(false)}
+          className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

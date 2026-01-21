@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global Styles */
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+}
+
 /* Custom Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
