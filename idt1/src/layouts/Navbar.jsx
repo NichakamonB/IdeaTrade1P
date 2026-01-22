@@ -1,5 +1,15 @@
 export default function Navbar({ activeTab, setActiveTab }) {
-  const tabs = ["Shortcuts", "MIT", "Stock Mover", "Project Name"];
+  const tabs = [
+  "Shortcuts",
+  "หมอดูหุ้น",
+  "Petroleum",
+  "Rubber Thai",
+  "Flow Intraday",
+  "S50",
+  "Gold",
+  "BidAsk",
+  "DR",
+];
 
   return (
     <div className="mb-10">
@@ -9,16 +19,16 @@ export default function Navbar({ activeTab, setActiveTab }) {
 
           return (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 rounded-full text-sm transition
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition
                 ${
-                  isActive
-                    ? "bg-sky-600/30 text-sky-300"
-                    : "bg-white/10 text-gray-300 hover:bg-white/20"
+                isActive
+                    ? "bg-yellow-400/20 text-yellow-300"
+                    : "bg-white/5 text-gray-300 hover:bg-white/10"
                 }`}
             >
-              {tab}
+            {tab}
             </button>
           );
         })}

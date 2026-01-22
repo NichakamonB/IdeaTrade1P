@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import logo from "@/assets/images/logo.png";
 import ToggleIcon from "@/assets/icons/Vector.svg";
 import WhatsNew from "@/pages/Dashboard/PreviewProjects.jsx";
-import mitIcon from "@/assets/icons/elements.png";
 import Navbar from "@/layouts/Navbar.jsx";
 import Sidebar from "@/layouts/Sidebar.jsx";
 
@@ -72,32 +71,32 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
 
       {/* ================= SIDEBAR ================= */}
-<Sidebar
-  collapsed={collapsed}
-  setCollapsed={setCollapsed}
-  activePage={activePage}
-  setActivePage={setActivePage}
-  projects={[
-    { id: "หมอดูหุ้น", name: "หมอดูหุ้น", free: true },
-    { id: "petroleum", name: "Petroleum", free: false },
-    { id: "rubber", name: "Rubber Thai", free: false },
-    { id: "flow", name: "Flow Intraday", free: false },
-    { id: "s50", name: "S50", free: false },
-    { id: "gold", name: "Gold", free: false },
-    { id: "bidask", name: "BidAsk", free: false },
-    { id: "tickmatch", name: "TickMatch", free: false },
-    { id: "dr", name: "DR", free: false },
-  ]}
-  unlocked={[]}
-  openProject={() => {}}
-  menuIcons={menuIcons}
-/>
+      <Sidebar
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+        activePage={activePage}
+        setActivePage={setActivePage}
+        projects={[
+          { id: "หมอดูหุ้น", name: "หมอดูหุ้น", free: true },
+          { id: "petroleum", name: "Petroleum", free: false },
+          { id: "rubber", name: "Rubber Thai", free: false },
+          { id: "flow", name: "Flow Intraday", free: false },
+          { id: "s50", name: "S50", free: false },
+          { id: "gold", name: "Gold", free: false },
+          { id: "bidask", name: "BidAsk", free: false },
+          { id: "tickmatch", name: "TickMatch", free: false },
+          { id: "dr", name: "DR", free: false },
+        ]}
+        unlocked={[]}
+        openProject={() => {}}
+        menuIcons={menuIcons}
+      />
 
       {/* ================= MAIN CONTENT ================= */}
       <main
-        className={`min-h-screen transition-all duration-300
+        className={`h-screen transition-all duration-300
           ${collapsed ? "ml-0" : "ml-72"}
-          px-10 py-8 overflow-y-auto`}
+          flex flex-col`}
       >
         {collapsed && (
           <button onClick={() => setCollapsed(false)} className="mb-6">
@@ -116,9 +115,16 @@ export default function Dashboard() {
 
         {/* Render Page */}
         {activePage === "whatsnew" && <WhatsNew />}
-        {activePage === "dashboard" && <div>
-          <h1 className="text-3xl font-bold mb-6">Mit Content</h1>
-        </div>}
+        {/* ===== CONTENT (FULL HEIGHT) ===== */}
+        <div className="flex-1 px-10 pb-8">
+          {activePage === "whatsnew" && <WhatsNew />}
+
+          {activePage === "dashboard" && (
+            <div className="w-full h-full bg-gradient-to-br from-[#243b55] to-[#1e2f3f] rounded-none p-8 flex flex-col">
+              <h1 className="text-3xl font-bold">MIT Content</h1>
+            </div>
+          )}
+          </div>
       </main>
     </div>
   );
