@@ -94,9 +94,9 @@ export default function Dashboard() {
 
       {/* ================= MAIN CONTENT ================= */}
       <main
-        className={`h-screen transition-all duration-300
+        className={`min-h-screen transition-all duration-300
           ${collapsed ? "ml-0" : "ml-72"}
-          flex flex-col`}
+          px-10 py-8 overflow-y-auto`}
       >
         {collapsed && (
           <button onClick={() => setCollapsed(false)} className="mb-6">
@@ -117,7 +117,6 @@ export default function Dashboard() {
         {activePage === "whatsnew" && <WhatsNew />}
         {/* ===== CONTENT (FULL HEIGHT) ===== */}
         <div className="flex-1 px-10 pb-8">
-          {activePage === "whatsnew" && <WhatsNew />}
 
           {activePage === "dashboard" && (
             <div className="w-full h-full bg-gradient-to-br from-[#243b55] to-[#1e2f3f] rounded-none p-8 flex flex-col">
