@@ -1,4 +1,4 @@
-import mitIcon from "@/assets/icons/elements.png";
+import mitIcon from "@/assets/icons/mit.svg";
 
 const projects = [
   {

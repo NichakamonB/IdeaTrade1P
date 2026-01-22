@@ -1,6 +1,6 @@
 import logo from "@/assets/images/logo.png";
 import ToggleIcon from "@/assets/icons/Vector.svg";
-import mitIcon from "@/assets/icons/elements.png";
+import mitIcon from "@/assets/icons/mit.svg";
 
 const projects = [
   {
