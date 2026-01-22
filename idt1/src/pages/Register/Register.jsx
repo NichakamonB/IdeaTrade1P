@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import googleIcon from "@/assets/icons/google.png"; // เปิดใช้บรรทัดนี้ถ้ามีรูป google
+import Rocket from "./Rocket"; // <--- 1. อย่าลืม Import ตรงนี้
+
 
 export default function Register() {
   const navigate = useNavigate();
@@ -147,23 +148,10 @@ export default function Register() {
           </form>
         </div>
 
-        {/* RIGHT SIDE: Image / Placeholder */}
-        <div className="hidden md:flex w-1/2 bg-gray-300 items-center justify-center relative overflow-hidden">
-            {/* จำลองเส้นกากบาทตามรูป Wireframe */}
-            <div className="absolute inset-0 border-2 border-gray-400 m-8">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gray-400 origin-top-left rotate-[32deg] translate-y-[50%]"></div>
-                 {/* หมายเหตุ: ส่วนนี้ผมทำเป็นกล่องเทาตามรูปต้นฉบับ 
-                     ของจริงคุณสามารถเปลี่ยนเป็น <img src="..." /> ได้เลยครับ */}
-                <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-4xl font-bold text-gray-500 opacity-50">Rocket</span>
-                </div>
-            </div>
-            
-             {/* ถ้าจะใส่รูปจริงให้ใช้โค้ดนี้แทนครับ: */}
-             {/* <img src="https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=2070&auto=format&fit=crop" 
-                  alt="Rocket" 
-                  className="w-full h-full object-cover" 
-             /> */}
+        {/* RIGHT SIDE: Rocket Animation */}
+        {/* 2. ลบโค้ดกล่องสีเทาเดิมออก แล้วใส่ Rocket แทน */}
+        <div className="hidden md:flex w-1/2 relative ">
+           <Rocket />
         </div>
 
       </div>
