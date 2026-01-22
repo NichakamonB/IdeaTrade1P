@@ -78,6 +78,7 @@ export default function Dashboard() {
   activePage={activePage}
   setActivePage={setActivePage}
   projects={[
+    { id: "หมอดูหุ้น", name: "หมอดูหุ้น", free: true },
     { id: "petroleum", name: "Petroleum", free: false },
     { id: "rubber", name: "Rubber Thai", free: false },
     { id: "flow", name: "Flow Intraday", free: false },
