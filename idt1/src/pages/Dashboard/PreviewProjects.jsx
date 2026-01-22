@@ -186,7 +186,6 @@ export default function PreviewProjects() {
 })}
         </div>
       </section>
-
     </div>
   );
 }
