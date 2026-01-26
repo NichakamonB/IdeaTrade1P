@@ -221,7 +221,7 @@ export default function Sidebar({
                 />
                 <span>{project.name}</span>
               </div>
-              <CrownIcon color={isActive ? "#38bdf8" : "#fbbf24"} />
+              <CrownIcon color={unlocked ? "#38bdf8" : "#fbbf24"} />
             </button>
           );
         })}
