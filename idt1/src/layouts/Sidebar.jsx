@@ -125,13 +125,13 @@ export default function Sidebar({
         <span 
           className={`px-2 py-0.5 rounded-full flex items-center gap-1 ${
             isMember 
-              ? "bg-yellow-500/20 text-yellow-400" // สีทองสำหรับ Premium
+              ? "bg-yellow-500/20 text-yellow-400" // สีทองสำหรับ MEMBERSHIP
               : "bg-sky-600/20 text-sky-400"       // สีฟ้าสำหรับ Free Access
           }`}
         >
-          {/* เปลี่ยนสีมงกุฎเป็นสีทอง (#facc15) ถ้าเป็น Premium */}
+          {/* เปลี่ยนสีมงกุฎเป็นสีทอง (#facc15) ถ้าเป็น MEMBERSHIP */}
           <CrownIcon color={isMember ? "#facc15" : "#38bdf8"} />
-          {isMember ? "PREMIUM" : "FREE ACCESS"}
+          {isMember ? "MEMBERSHIP" : "FREE ACCESS"}
         </span>
         <span className="px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300">
           STATUS: ONLINE
