@@ -1,4 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import KbankIcon from "@/assets/icons/Kbank.png";
+import CloseIcon from "@/assets/icons/Close_Circle.png";
+import CopyIcon from "@/assets/icons/copy.png";
+import PromptPayQR from "@/assets/icons/Promptpay.png";
+import TickIcon from "@/assets/icons/tick-01.png";
+import CancelIcon from "@/assets/icons/cancel-01.png";
+import VisaIcon from "@/assets/icons/Visa.png";
+import MastercardIcon from "@/assets/icons/Mastercard.png";
 
 const TOOLS = [
   { id: "fortune", name: "หมอดูหุ้น", monthly: 2500, yearly: 25000 },
@@ -17,11 +25,42 @@ export default function MemberRegister() {
   const [selectedTools, setSelectedTools] = useState([]);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [status, setStatus] = useState("idle"); 
+
+  // 🔹 Credit / Debit Card
+  const [cardType, setCardType] = useState("visa");
+  const [cardName, setCardName] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expMonth, setExpMonth] = useState("");
+  const [expYear, setExpYear] = useState("");
+
+  // 🔹 Bank Account only
+  const [slipImage, setSlipImage] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  /* ================= FUNCTIONS ================= */
+  const closeModal = () => {
+    setShowModal(false);
+    setStatus("idle");
+    setSlipImage(null);
+  };
 
   const toggleTool = (id) => {
     setSelectedTools((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  };
+
+  const handleCopyAccount = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleUploadSlip = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setSlipImage(URL.createObjectURL(file));
   };
 
   const totalPrice = selectedTools.reduce((sum, id) => {
@@ -30,8 +69,17 @@ export default function MemberRegister() {
     return sum + (billingCycle === "monthly" ? tool.monthly : tool.yearly);
   }, 0);
 
+  useEffect(() => {
+    if (selectedPayment === "promptpay" && status === "success") {
+      const timer = setTimeout(() => {
+        handleConfirmPayment();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [status, selectedPayment]);
+
   const handleConfirmPayment = () => {
-    // ✅ FIX: set membership + unlocked เฉพาะที่ซื้อ
     localStorage.setItem(
       "userProfile",
       JSON.stringify({
@@ -52,6 +100,15 @@ export default function MemberRegister() {
     { id: "card", label: "Credit / Debit Card" },
   ];
 
+  const months = Array.from({ length: 12 }, (_, i) =>
+    String(i + 1).padStart(2, "0")
+  );
+
+  const years = Array.from({ length: 10 }, (_, i) =>
+    new Date().getFullYear() + i
+  );
+
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0A1224] to-[#060B18] text-white p-8">
       <div className="max-w-[1440px] mx-auto grid grid-cols-12 gap-6">
@@ -112,6 +169,7 @@ export default function MemberRegister() {
 
         {/* RIGHT */}
         <div className="col-span-4 space-y-4">
+
           {/* Payment Method */}
           <div className="bg-[#0F1B2D] p-5 rounded-xl">
             <h2 className="text-xl font-semibold mb-3">Payment Method</h2>
@@ -143,7 +201,8 @@ export default function MemberRegister() {
                 <div key={id} className="flex justify-between text-sm mb-2">
                   <span>{t.name}</span>
                   <span>
-                    {billingCycle === "monthly" ? t.monthly : t.yearly}฿
+                    {billingCycle === "monthly" ?
+                      t.monthly : t.yearly}฿
                   </span>
                 </div>
               );
@@ -167,75 +226,203 @@ export default function MemberRegister() {
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* ================= MODAL ================= */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[#0F1B2D] p-6 rounded-xl w-[420px] space-y-4">
 
-            <h3 className="text-xl font-semibold">
-              Payment :{" "}
-              {selectedPayment === "bank"
-                ? "Bank Account"
-                : selectedPayment === "promptpay"
-                ? "PromptPay"
-                : "Credit / Debit Card"}
-            </h3>
-
+            {/* ================= BANK ACCOUNT ================= */}
             {selectedPayment === "bank" && (
-              <div className="space-y-2">
-                <p className="font-medium">Mr.Chalearmpol Neamsri</p>
-                <div className="flex items-center justify-between bg-[#13233A] px-4 py-3 rounded-lg">
-                  <span className="text-[#9FB3C8]">047-2-27169-7</span>
+              <div className="relative bg-[#0B1629] rounded-2xl p-5 space-y-4">
+
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="absolute top-3 right-3"
+                >
+                  <img src={CloseIcon} alt="close" className="w-6 h-6" />
+                </button>
+
+                <p className="text-sm text-[#9FB3C8] font-medium">
+                  Bank Account Detail
+                </p>
+
+                <div className="flex items-center gap-4 bg-[#2A2A2A] rounded-2xl p-4">
+                  <img src={KbankIcon} alt="kbank" className="w-12 h-12" />
+
+                  <div className="flex-1">
+                    <p className="font-semibold text-white">
+                      Kbank <span className="text-[#9FB3C8]">(Kasikorn Bank)</span>
+                    </p>
+                    <p className="text-sm text-[#E5E7EB]">
+                      Mr.Chalearmpol Neamsri
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-sm text-[#9FB3C8]">
+                        047-2-27169-7
+                      </span>
+                      <button onClick={() => handleCopyAccount("047-2-27169-7")}>
+                        <img src={CopyIcon} alt="copy" className="w-4 h-4" />
+                      </button>
+                      {copied && (
+                        <span className="text-xs text-green-400 ml-2">
+                          Copied!
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <label className="w-full h-12 rounded-xl bg-[#E5E7EB] text-black font-semibold flex items-center justify-center cursor-pointer">
+                  Upload Slip
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handleUploadSlip}
+                  />
+                </label>
+
+                {slipImage && (
+                  <div className="bg-[#13233A] rounded-xl p-3">
+                    <p className="text-xs text-[#9FB3C8] mb-2">Uploaded Slip</p>
+                    <img src={slipImage} alt="slip" className="w-full rounded-lg" />
+                  </div>
+                )}
+
+                 {/* ACTION */}
+                <div className="flex gap-3 pt-4">
                   <button
-                    onClick={() => handleCopy("047-2-27169-7")}
-                    className="px-3 py-1 text-sm bg-[#1F3354] rounded"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 h-11 bg-[#1F3354] rounded"
                   >
-                    📋 Copy
+                    Cancel
+                  </button>
+
+                  <button
+                    onClick={handleConfirmPayment}
+                    disabled={!slipImage}
+                    className={`flex-1 h-11 rounded font-semibold transition
+                      ${
+                        slipImage
+                          ? "bg-[#0E6BA8] text-black"
+                          : "bg-[#3A3A3A] text-[#9CA3AF] cursor-not-allowed"
+                      }`}
+                  >
+                    Confirm
                   </button>
                 </div>
               </div>
             )}
 
-            {selectedPayment === "promptpay" && (
-              <div className="flex flex-col items-center gap-3">
-                <div className="bg-white p-3 rounded-lg w-full aspect-[4/3] flex justify-center">
+            {/* ================= PROMPTPAY ================= */}
+            {selectedPayment === "promptpay" && status === "idle" && (
+              <div className="relative bg-gradient-to-b from-[#0A2442] to-[#071C34] rounded-2xl p-6 flex flex-col items-center text-white">
+
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="absolute top-3 right-3"
+                >
+                  <img src={CloseIcon} alt="close" className="w-6 h-6" />
+                </button>
+
+                <h2 className="text-2xl font-semibold mb-6">
+                  Scan QR Code
+                </h2>
+
+                {/* QR Frame */}
+                <div className="relative w-[260px] h-[260px] bg-white rounded-xl flex items-center justify-center mb-6">
                   <img
-                    src="/qr-promptpay.png"
-                    alt="QR"
-                    className="max-h-full"
+                    src={PromptPayQR}
+                    alt="promptpay"
+                    className="w-[220px] h-[220px] object-contain"
                   />
+
+                  {/* Corner */}
+                  <span className="absolute top-2 left-2 w-6 h-6 border-t-4 border-l-4 border-white" />
+                  <span className="absolute top-2 right-2 w-6 h-6 border-t-4 border-r-4 border-white" />
+                  <span className="absolute bottom-2 left-2 w-6 h-6 border-b-4 border-l-4 border-white" />
+                  <span className="absolute bottom-2 right-2 w-6 h-6 border-b-4 border-r-4 border-white" />
                 </div>
-                <p className="text-sm text-[#9FB3C8]">
-                  Mr.Chalearmpol Neamsri
-                </p>
+
+                {/* Info */}
+                <div className="text-center text-sm space-y-1">
+                  <p className="font-semibold">Kbank (Kasikorn Bank)</p>
+                  <p>Mr.Chalearmpol Neamsri</p>
+                  <p className="opacity-70">xxx-x-x7169-x</p>
+                  <p className="opacity-70">0000000000000</p>
+                </div>
+
+                {/* Demo */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setStatus("success")}
+                    className="px-4 py-2 rounded bg-[#0E6BA8]"
+                  >
+                    Simulate Success
+                  </button>
+                  <button
+                    onClick={() => setStatus("failed")}
+                    className="px-4 py-2 rounded bg-[#7A1C1C]"
+                  >
+                    Simulate Failed
+                  </button>
+                </div>
+
               </div>
             )}
 
-            {selectedPayment === "card" && (
-              <div className="space-y-3">
-                <input className="w-full h-10 bg-[#13233A] px-3 rounded" placeholder="Card Number" />
-                <input className="w-full h-10 bg-[#13233A] px-3 rounded" placeholder="Cardholder Name" />
-                <div className="flex gap-3">
-                  <input className="flex-1 h-10 bg-[#13233A] px-3 rounded" placeholder="MM / YY" />
-                  <input className="flex-1 w-full h-10 bg-[#13233A] px-3 rounded" placeholder="CVV / CVC" />
-                </div>
+            {/* SUCCESS */}
+            {selectedPayment === "promptpay" && status === "success" && (
+              <div className="relative bg-[#071C34] rounded-2xl p-10 flex flex-col items-center gap-6">
+
+                {/* Close */}
+                <button
+                  onClick={closeModal}
+                  className="absolute top-3 right-3"
+                >
+                  <img src={CloseIcon} alt="close" className="w-6 h-6" />
+                </button>
+
+                <h2 className="text-2xl font-semibold">
+                  Payment received
+                </h2>
+
+                <img
+                  src={TickIcon}
+                  alt="success"
+                  className="w-32 h-32"
+                />
               </div>
             )}
 
-            <div className="flex gap-3 pt-4">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 h-11 bg-[#1F3354] rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmPayment}
-                className="flex-1 h-11 bg-[#0E6BA8] rounded font-semibold"
-              >
-                Pay Now
-              </button>
-            </div>
+            {/* FAILED */}
+            {selectedPayment === "promptpay" && status === "failed" && (
+              <div className="relative bg-[#071C34] rounded-2xl p-10 flex flex-col items-center gap-6">
+
+                {/* Close */}
+                <button
+                  onClick={closeModal}
+                  className="absolute top-3 right-3"
+                >
+                  <img src={CloseIcon} alt="close" className="w-6 h-6" />
+                </button>
+
+                <h2 className="text-2xl font-semibold">
+                  Payment denied
+                </h2>
+
+                <img
+                  src={CancelIcon}
+                  alt="failed"
+                  className="w-32 h-32"
+                />
+              </div>
+            )}
+
+
+            {/* ================= Credit / Debit Card ================= */}
+            
           </div>
         </div>
       )}
