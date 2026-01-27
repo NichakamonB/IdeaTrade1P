@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import preview from "@/assets/icons/preview.svg";
 import apreview from "@/assets/icons/apreview.svg";
 
+// ถ้ายังไม่มีรูป mit.svg ให้ใช้ preview แทนชั่วคราวได้ หรือปล่อยไว้แบบนี้ก็ได้ (ผมกัน error ไว้ให้แล้วด้านล่าง)
 import mit from "@/assets/icons/mit.svg";
 import amit from "@/assets/icons/amit.svg";
 
@@ -60,7 +61,7 @@ const getSidebarIcon = (key, isActive) =>
   isActive ? sidebarIcons[key]?.active : sidebarIcons[key]?.default;
 
 /* =======================
-   Projects
+   Projects List
 ======================= */
 const projects = [
   { id: "fortune", name: "หมอดูหุ้น", iconKey: "fortune" },
@@ -75,7 +76,7 @@ const projects = [
 ];
 
 /* =======================
-   Crown Icon
+   Crown Icon Component
 ======================= */
 const CrownIcon = ({ color }) => (
   <svg viewBox="0 0 24 24" className="w-4 h-4" fill={color}>
@@ -112,24 +113,23 @@ export default function Sidebar({
 
   return (
     <aside className="fixed top-0 left-0 z-40 w-72 h-screen bg-slate-900/70 border-r border-sky-400/20 flex flex-col">
-      {/* Logo */}
+      {/* --- Logo & Toggle --- */}
       <div className="px-6 py-6 border-b border-white/10 flex justify-between items-center">
-        <img src={logo} className="w-40" />
+        <img src={logo} className="w-40" alt="Logo" />
         <button onClick={() => setCollapsed(true)}>
-          <img src={ToggleIcon} className="w-4 h-4" />
+          <img src={ToggleIcon} className="w-4 h-4" alt="Collapse" />
         </button>
       </div>
 
-      {/* Status */}
+      {/* --- User Status --- */}
       <div className="px-6 py-4 flex gap-2 text-xs">
         <span 
           className={`px-2 py-0.5 rounded-full flex items-center gap-1 ${
             isMember 
-              ? "bg-yellow-500/20 text-yellow-400" // สีทองสำหรับ MEMBERSHIP
-              : "bg-sky-600/20 text-sky-400"       // สีฟ้าสำหรับ Free Access
+              ? "bg-yellow-500/20 text-yellow-400" 
+              : "bg-sky-600/20 text-sky-400"
           }`}
         >
-          {/* เปลี่ยนสีมงกุฎเป็นสีทอง (#facc15) ถ้าเป็น MEMBERSHIP */}
           {isMember && <CrownIcon color="#facc15" />}
           {isMember ? "MEMBERSHIP" : "FREE ACCESS"}
         </span>
@@ -138,9 +138,10 @@ export default function Sidebar({
         </span>
       </div>
 
-      {/* Menu */}
+      {/* --- Menu List --- */}
       <nav className="flex-1 px-4 py-4 text-sm space-y-2 overflow-y-auto">
-        {/* Preview */}
+        
+        {/* 1. ปุ่ม Preview Projects */}
         <button
           onClick={() => setActivePage("whatsnew")}
           className={`w-full px-4 py-2 rounded-lg flex justify-between items-center
@@ -154,30 +155,33 @@ export default function Sidebar({
             <img
               src={getSidebarIcon("preview", activePage === "whatsnew")}
               className="w-5 h-5"
+              alt="Preview"
             />
             <span>Preview Projects</span>
           </div>
           <span className="w-2 h-2 bg-emerald-400 rounded-full" />
         </button>
 
-        {/* Beta */}
+        {/* 2. Beta Tools (MIT) */}
         <div className="text-gray-400 uppercase text-xs mt-6 mb-2">
           Beta Tools
         </div>
 
         <button
-          onClick={() => setActivePage("dashboard")}
+          onClick={() => setActivePage("mit")} // ✅ แก้ไข: ส่งค่า "mit"
           className={`w-full px-4 py-2 rounded-lg flex justify-between items-center
           ${
-            activePage === "dashboard"
+            activePage === "mit" // ✅ แก้ไข: เช็คค่า "mit"
               ? "bg-sky-500/20 text-sky-300"
               : "hover:bg-white/5 text-gray-300"
           }`}
         >
           <div className="flex gap-3 items-center">
+            {/* ป้องกัน error ถ้ารูป mit ไม่มี ให้ใช้รูป preview แทน */}
             <img
-              src={getSidebarIcon("mit", activePage === "dashboard")}
+              src={sidebarIcons.mit?.default ? getSidebarIcon("mit", activePage === "mit") : sidebarIcons.preview.default}
               className="w-5 h-5"
+              alt="MIT"
             />
             <span>MIT</span>
           </div>
@@ -186,7 +190,7 @@ export default function Sidebar({
           </span>
         </button>
 
-        {/* Premium */}
+        {/* 3. Premium Tools */}
         <div className="text-gray-400 uppercase text-xs mt-6 mb-2">
           Premium Tools
         </div>
@@ -194,9 +198,7 @@ export default function Sidebar({
         {projects.map(project => {
           const unlocked = unlockedList.includes(project.id);
           const isActive = activePage === project.id;
-
-          // ❗ เงื่อนไขการเข้าได้
-          const canAccess = true; // ทุกคนเข้าได้
+          const canAccess = true;
 
           return (
             <button
@@ -217,6 +219,7 @@ export default function Sidebar({
                 <img
                   src={getSidebarIcon(project.iconKey, isActive)}
                   className="w-5 h-5"
+                  alt={project.name}
                 />
                 <span>{project.name}</span>
               </div>
@@ -225,12 +228,11 @@ export default function Sidebar({
           );
         })}
       </nav>
-      {/* Upgrade to Pro */}
+
+      {/* --- Upgrade Button --- */}
       <div className="px-4 pb-6 pt-2">
         <button
-          onClick={() => {
-            navigate("/member-register");
-          }}
+          onClick={() => navigate("/member-register")}
           className="w-full flex items-center justify-center gap-2
           rounded-xl px-4 py-3
           bg-gradient-to-r from-amber-400 to-yellow-500
