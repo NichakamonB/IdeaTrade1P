@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/images/logo.png";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/firebase";
-import googleIcon from "@/assets/icons/google.png";
 import Rocket from "@/assets/icons/rocket-lunch 1.svg";
 import Crown from "@/assets/icons/crown 1.svg";
 

@@ -1,6 +1,9 @@
+import React from "react";
+
 export default function Navbar({ activePage, setActivePage }) {
+  // ✅ กำหนด ID ให้ตรงกับ Key ใน Dashboard
   const tabs = [
-    { label: "Shortcuts", id: "whatsnew" },
+    { label: "Shortcuts", id: "shortcuts" },
     { label: "หมอดูหุ้น", id: "fortune" },
     { label: "Petroleum", id: "petroleum" },
     { label: "Rubber Thai", id: "rubber" },
@@ -12,22 +15,23 @@ export default function Navbar({ activePage, setActivePage }) {
   ];
 
   return (
-    <div className="mb-10">
+    <div className="mb-8">
       <div className="flex gap-3 flex-wrap">
         {tabs.map((tab) => {
+          // เช็คว่าหน้าปัจจุบันตรงกับปุ่มนี้ไหม
           const isActive = activePage === tab.id;
 
           return (
             <button
               key={tab.id}
-              onClick={() => setActivePage(tab.id)}
+              onClick={() => setActivePage(tab.id)} // ✅ เมื่อกด ให้เปลี่ยน state ใน Dashboard
               className={`
                 px-5 py-2 rounded-full text-sm font-medium
-                transition-colors duration-200
+                transition-all duration-200 border
                 ${
                   isActive
-                    ? "bg-[#3B341B] text-[#FFCC00] border border-[#B6A700]/50"
-                    : "bg-white/5 text-gray-300 hover:bg-white/10"
+                    ? "bg-[#3B341B] text-[#FFCC00] border-[#B6A700]/50 shadow-[0_0_10px_rgba(255,204,0,0.2)]"
+                    : "bg-white/5 text-gray-400 border-transparent hover:bg-white/10 hover:text-white"
                 }
               `}
             >
