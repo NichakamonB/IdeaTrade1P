@@ -86,8 +86,22 @@ export default function Sidebar({
     setIsMember(user.role === "member" || user.unlockedItems?.length > 0);
   }, []);
 
-  if (collapsed) return null;
+  /* ================= COLLAPSED STATE ================= */
+  if (collapsed) {
+    return (
+      <button
+        onClick={() => setCollapsed(false)}
+        className="fixed left-0 top-16 z-50 w-9 h-9 rounded-r-xl bg-[#0c0f14] border border-white/10 border-l-0 flex items-center justify-center transition hover:bg-white/10"
+      >
+        <img
+          src={ToggleIcon}
+          className="w-4 opacity-70 rotate-180"
+        />
+      </button>
+    );
+  }
 
+  /* ================= EXPANDED ================= */
   return (
     <aside className="fixed top-0 left-0 z-40 w-[280px] h-screen
       bg-gradient-to-b from-[#0c0f14] to-[#0a0d11]

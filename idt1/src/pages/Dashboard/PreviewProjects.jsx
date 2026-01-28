@@ -1,4 +1,3 @@
-// pages/Dashboard/PreviewProjects.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mitIcon from "@/assets/icons/mit.svg";
@@ -8,12 +7,12 @@ import mitIcon from "@/assets/icons/mit.svg";
 ======================= */
 const projects = [
   {
-      id: "stock-mover",
-      name: "Stock Mover",
-      desc: "ดูหุ้นที่มีการเคลื่อนไหวแรงแบบ Real-time",
-      external: true,
-      url: "https://stockmover.com",
-    },
+    id: "stock-mover",
+    name: "Stock Mover",
+    desc: "ดูหุ้นที่มีการเคลื่อนไหวแรงแบบ Real-time",
+    external: true,
+    url: "https://stockmover.com",
+  },
   {
     id: "Project-Name",
     name: "Project Name",
@@ -171,41 +170,65 @@ export default function PreviewProjects() {
           Other Project
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => {
             const isUnlocked = canAccess(project);
 
             return (
               <div
                 key={project.id}
-                className="bg-[#3f3f3f] rounded-2xl p-6
-                           flex flex-col gap-4"
+                className="bg-[#3a3a3a] rounded-xl p-6 flex flex-col gap-4
+                           border border-transparent hover:border-gray-500
+                           transition duration-200"
               >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center
-                    ${
-                      project.premium
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-slate-600 text-white"
-                    }`}
-                >
-                  {project.external ? "↗" : project.premium ? "⭐" : "🚀"}
+                {/* ===== Header ===== */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center
+                      ${
+                        project.premium
+                          ? "bg-[#cca300] border-2 border-[#b38f00] text-white"
+                          : "bg-sky-600 text-white"
+                      }`}
+                  >
+                    {project.external ? (
+                    <span className="text-2xl font-bold">↗</span>
+                  ) : project.premium ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-6 h-6"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <span className="text-xl">🚀</span>
+                  )}
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white">
+                    {project.name}
+                    {project.premium && (
+                      <span className="text-[#cca300] text-sm ml-2">
+                        Premium
+                      </span>
+                    )}
+                  </h3>
                 </div>
 
-                <h3 className="text-white font-semibold">
-                  {project.name}
-                  {project.premium && (
-                    <span className="text-yellow-400 text-sm">
-                      {" "}
-                      (Premium)
-                    </span>
-                  )}
-                </h3>
+                {/* ===== Description ===== */}
+                <div className="flex-grow">
+                  <p className="text-[#a0a0a0] text-sm leading-relaxed">
+                    {project.desc}
+                  </p>
+                </div>
 
-                <p className="text-sm text-slate-300">
-                  {project.desc}
-                </p>
-
+                {/* ===== Action Button ===== */}
                 <button
                   onClick={() => {
                     if (project.external) {
@@ -214,24 +237,23 @@ export default function PreviewProjects() {
                       handleOpenTool(project);
                     }
                   }}
-                  className={`mt-auto rounded-full py-2 text-sm font-medium
-                              flex items-center justify-center gap-2 transition
+                  className={`w-full mt-2 py-2.5 rounded-full font-semibold
+                    transition shadow-md
                     ${
                       project.external
                         ? "bg-sky-600 hover:bg-sky-500 text-white"
                         : project.premium
                           ? isUnlocked
                             ? "bg-sky-600 hover:bg-sky-500 text-white"
-                            : "bg-yellow-500/80 hover:bg-yellow-400 text-black"
+                            : "bg-[#cca300] hover:bg-[#b38f00] text-white"
                           : "bg-sky-600 hover:bg-sky-500 text-white"
                     }`}
                 >
                   {project.external
-                    ? "Open External"
+                    ? "OPEN EXTERNAL ↗"
                     : isUnlocked
-                      ? "Open tool"
-                      : "Unlock Premium"}
-                  {project.external && <span className="text-xs">↗</span>}
+                      ? "OPEN TOOL"
+                      : "JOIN MEMBERSHIP"}
                 </button>
               </div>
             );
