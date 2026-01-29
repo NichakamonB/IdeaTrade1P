@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import mitIcon from "@/assets/icons/amit.svg";
+import mitIcon from "@/assets/icons/amit.svg"; 
 
 /* =======================
    Project Data
@@ -136,79 +136,78 @@ export default function PreviewProjects() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="flex gap-4 w-full">
-            {/* Icon */}
-            <div className="w-12 h-12 rounded-xl bg-[#1B2E3E] flex items-center justify-center shrink-0">
-              <img src={mitIcon} alt="MIT" className="w-7 h-7" />
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 w-full">
-              {/* ===== Title Row ===== */}
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <h2 className="text-xl md:text-2xl font-semibold text-white">
-                  MIT : Multi-Agent Intelligent Analyst
-                </h2>
-
-                <button
-                  onClick={handleOpenMIT}
-                  className="bg-[#0B78B8] hover:bg-[#0E8ED8]
-                            px-5 py-2 rounded-full
-                            text-white text-sm font-semibold
-                            transition flex items-center gap-2 shrink-0"
-                >
-                  <img src={mitIcon} className="w-4 h-4" />
-                  Open MIT
-                </button>
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-xl bg-[#1B2E3E] flex items-center justify-center shrink-0">
+                <img src={mitIcon} alt="MIT" className="w-7 h-7" />
               </div>
 
-              {/* ===== Description (FULL WIDTH) ===== */}
-              <p className="text-sm text-slate-300 mt-2 leading-relaxed w-full">
-                Experience the next level of trading with our Multi-Agent LLM system
-                that simulates a professional institutional research team. By assigning
-                specific roles to multiple AI agents, the system engages in rigorous
-                data debates to eliminate bias, providing you with the most objective
-                and high-probability trading insights available.
-              </p>
+              {/* Content */}
+              <div className="flex-1 w-full">
+                {/* Title Row */}
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <h2 className="text-xl md:text-2xl font-semibold text-white">
+                    MIT : Multi-Agent Intelligent Analyst
+                  </h2>
+
+                  <button
+                    onClick={handleOpenMIT}
+                    className="bg-[#0B78B8] hover:bg-[#0E8ED8]
+                             px-5 py-2 rounded-full
+                             text-white text-sm font-semibold
+                             transition flex items-center gap-2 shrink-0"
+                  >
+                    <img src={mitIcon} className="w-4 h-4" alt="icon" />
+                    Open MIT
+                  </button>
+                </div>
+
+                {/* Description */}
+                <p className="text-sm text-slate-300 mt-2 leading-relaxed w-full">
+                  Experience the next level of trading with our Multi-Agent LLM system
+                  that simulates a professional institutional research team. By assigning
+                  specific roles to multiple AI agents, the system engages in rigorous
+                  data debates to eliminate bias, providing you with the most objective
+                  and high-probability trading insights available.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-    {/* Feature Cards */}
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-      {[
-        {
-          title: "Role-Based AI Analysis",
-          desc: "Strategic collaboration between 4 specialized AI teams: Analyst, Research, Risk Management, and Trader. This ensures every market move is vetted from every professional angle.",
-        },
-        {
-          title: "Bull vs. Bear Debate",
-          desc: "Our proprietary debate engine pits 'Bullish' vs. 'Bearish' AI agents against each other to challenge assumptions and deliver balanced, bias-free market conclusions.",
-        },
-        {
-          title: "Smart Execution & Risk Guard",
-          desc: "Receive clear Buy/Sell/Hold signals with logical justification. The system includes an automated 'Risk Vet' that can veto recommendations if market volatility exceeds safety limits.",
-        },
-        {
-          title: "Real-time Intel & Backtesting",
-          desc: "Access live market reports and verify strategies with our integrated backtesting engine. See how AI-driven decisions would have performed in historical cycles before you commit.",
-        },
-      ].map((item, idx) => (
-        <div
-          key={idx}
-          className="bg-[#1B2E3E] rounded-xl p-5
-                     border border-white/5"
-        >
-          <h3 className="font-semibold text-sm text-white mb-2">
-            {item.title}
-          </h3>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            {item.desc}
-          </p>
+          {/* Feature Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+            {[
+              {
+                title: "Role-Based AI Analysis",
+                desc: "Strategic collaboration between 4 specialized AI teams: Analyst, Research, Risk Management, and Trader.",
+              },
+              {
+                title: "Bull vs. Bear Debate",
+                desc: "Our proprietary debate engine pits 'Bullish' vs. 'Bearish' AI agents against each other to challenge assumptions.",
+              },
+              {
+                title: "Smart Execution & Risk Guard",
+                desc: "Receive clear Buy/Sell/Hold signals with logical justification including an automated 'Risk Vet'.",
+              },
+              {
+                title: "Real-time Intel & Backtesting",
+                desc: "Access live market reports and verify strategies with our integrated backtesting engine.",
+              },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-[#1B2E3E] rounded-xl p-5 border border-white/5"
+              >
+                <h3 className="font-semibold text-sm text-white mb-2">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* ===== OTHER PROJECTS ===== */}
       <section>
@@ -220,12 +219,19 @@ export default function PreviewProjects() {
           {projects.map((project) => {
             const isUnlocked = canAccess(project);
 
+            // Logic 1: สีพื้นหลังการ์ด
+            // ถ้า Premium และ ซื้อแล้ว -> สีทองเข้ม
+            // ถ้าไม่ใช่ (ยังไม่ซื้อ หรือ ฟรี) -> สีเทาสว่าง (#606060)
+            const cardBackground = (project.premium && isUnlocked)
+              ? "bg-[#3e3205]"
+              : "bg-[#606060]";
+
             return (
               <div
                 key={project.id}
-                className="bg-[#3a3a3a] rounded-xl p-6 flex flex-col gap-4
+                className={`${cardBackground} rounded-xl p-6 flex flex-col gap-4
                            border border-transparent hover:border-gray-500
-                           transition duration-200"
+                           transition duration-200`}
               >
                 {/* ===== Header ===== */}
                 <div className="flex items-center gap-4">
@@ -238,23 +244,14 @@ export default function PreviewProjects() {
                       }`}
                   >
                     {project.external ? (
-                    <span className="text-2xl font-bold">↗</span>
-                  ) : project.premium ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="w-6 h-6"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  ) : (
-                    <span className="text-xl">🚀</span>
-                  )}
+                      <span className="text-2xl font-bold">↗</span>
+                    ) : project.premium ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                        <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <span className="text-xl">🚀</span>
+                    )}
                   </div>
 
                   <h3 className="text-xl font-bold text-white">
@@ -269,7 +266,7 @@ export default function PreviewProjects() {
 
                 {/* ===== Description ===== */}
                 <div className="flex-grow">
-                  <p className="text-[#a0a0a0] text-sm leading-relaxed">
+                  <p className="text-[#e0e0e0] text-sm leading-relaxed">
                     {project.desc}
                   </p>
                 </div>
@@ -289,9 +286,8 @@ export default function PreviewProjects() {
                       project.external
                         ? "bg-sky-600 hover:bg-sky-500 text-white"
                         : project.premium
-                          ? isUnlocked
-                            ? "bg-sky-600 hover:bg-sky-500 text-white"
-                            : "bg-[#cca300] hover:bg-[#b38f00] text-white"
+                          // Logic 2: ถ้าเป็น Premium ให้ปุ่มเป็นสีทองเสมอ
+                          ? "bg-[#cca300] hover:bg-[#b38f00] text-white"
                           : "bg-sky-600 hover:bg-sky-500 text-white"
                     }`}
                 >

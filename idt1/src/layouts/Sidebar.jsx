@@ -184,14 +184,28 @@ export default function Sidebar({
               }}
               className={`w-full h-11 px-4 rounded-lg flex items-center justify-between
               ${active
-                ? "bg-slate-800 text-white"
-                : "hover:bg-white/5 text-gray-400"}`}
+                ? "bg-slate-800"
+                : "hover:bg-white/5"}`}
             >
-              <div className="flex items-center gap-3">
+              {/* 1. เพิ่ม Class สี Text ตรงนี้ 
+                  - ถ้า unlocked ให้เป็นสีทอง (text-yellow-400)
+                  - ถ้า active เป็นสีขาว
+                  - ถ้าปกติ เป็นสีเทา
+              */}
+              <div className={`flex items-center gap-3 font-medium
+                ${unlocked 
+                  ? "text-yellow-400" 
+                  : active ? "text-white" : "text-gray-400"
+                }`}
+              >
                 <img src={getIcon(p.iconKey, active)} className="w-5" />
                 {p.name}
               </div>
-              <CrownIcon color={unlocked ? "#38bdf8" : "#facc15"} />
+              
+              {/* 2. เปลี่ยนสีมงกุฎ
+                  - ให้เป็นสีทอง (#facc15) ตลอดเวลาตามที่ขอ
+              */}
+              <CrownIcon color="#facc15" />
             </button>
           );
         })}
@@ -199,7 +213,7 @@ export default function Sidebar({
         <div className="h-10" />
       </nav>
 
-      {/* ✅ Join Membership (แก้ตรงนี้สำคัญที่สุด) */}
+      {/* ✅ Join Membership */}
       <div className="px-4 pb-6">
         <button
           onClick={() => setActivePage("premiumtools")}
