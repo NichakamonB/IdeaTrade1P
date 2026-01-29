@@ -96,6 +96,7 @@ export default function Sidebar({
         <img
           src={ToggleIcon}
           className="w-4 opacity-70 rotate-180"
+          alt="toggle"
         />
       </button>
     );
@@ -109,9 +110,9 @@ export default function Sidebar({
 
       {/* Logo */}
       <div className="px-6 py-6 flex justify-between items-center">
-        <img src={logo} className="w-36" />
+        <img src={logo} className="w-36" alt="logo" />
         <button onClick={() => setCollapsed(true)}>
-          <img src={ToggleIcon} className="w-4 opacity-60" />
+          <img src={ToggleIcon} className="w-4 opacity-60" alt="toggle" />
         </button>
       </div>
 
@@ -141,7 +142,7 @@ export default function Sidebar({
             ? "bg-slate-800 text-white"
             : "hover:bg-white/5 text-gray-300"}`}
         >
-          <img src={getIcon("preview", activePage === "preview-projects")} className="w-5 mr-3" />
+          <img src={getIcon("preview", activePage === "preview-projects")} className="w-5 mr-3" alt="preview" />
           Preview Projects
         </button>
 
@@ -158,7 +159,7 @@ export default function Sidebar({
             : "hover:bg-white/5 text-gray-300"}`}
         >
           <div className="flex items-center gap-3">
-            <img src={getIcon("mit", activePage === "mit")} className="w-5" />
+            <img src={getIcon("mit", activePage === "mit")} className="w-5" alt="mit" />
             MIT
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-400 text-black">
@@ -187,24 +188,27 @@ export default function Sidebar({
                 ? "bg-slate-800"
                 : "hover:bg-white/5"}`}
             >
-              {/* 1. เพิ่ม Class สี Text ตรงนี้ 
-                  - ถ้า unlocked ให้เป็นสีทอง (text-yellow-400)
-                  - ถ้า active เป็นสีขาว
-                  - ถ้าปกติ เป็นสีเทา
-              */}
-              <div className={`flex items-center gap-3 font-medium
+              {/* 1. ส่วนชื่อและไอคอน */}
+              <div className={`flex items-center gap-3 font-medium transition-colors
                 ${unlocked 
-                  ? "text-yellow-400" 
+                  ? "text-yellow-400" // ซื้อแล้ว: สีทอง
                   : active ? "text-white" : "text-gray-400"
                 }`}
               >
-                <img src={getIcon(p.iconKey, active)} className="w-5" />
+                {/* 2. ส่วนไอคอน (ใช้ Filter ย้อมสีทองเมื่อ unlocked) */}
+                <img 
+                  src={getIcon(p.iconKey, active)} 
+                  className="w-5 transition-all"
+                  alt={p.name}
+                  style={unlocked ? {
+                    // Filter นี้จะเปลี่ยนสีไอคอนให้เป็นสีทอง #facc15
+                    filter: "brightness(0) saturate(100%) invert(88%) sepia(21%) saturate(6972%) hue-rotate(359deg) brightness(101%) contrast(104%)"
+                  } : {}}
+                />
                 {p.name}
               </div>
               
-              {/* 2. เปลี่ยนสีมงกุฎ
-                  - ให้เป็นสีทอง (#facc15) ตลอดเวลาตามที่ขอ
-              */}
+              {/* 3. ส่วนมงกุฎ (สีทองเสมอ) */}
               <CrownIcon color="#facc15" />
             </button>
           );
@@ -213,7 +217,7 @@ export default function Sidebar({
         <div className="h-10" />
       </nav>
 
-      {/* ✅ Join Membership */}
+      {/* Join Membership Button */}
       <div className="px-4 pb-6">
         <button
           onClick={() => setActivePage("premiumtools")}
