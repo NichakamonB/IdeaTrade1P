@@ -6,7 +6,7 @@ import PreviewProjects from "@/pages/Dashboard/PreviewProjects.jsx";
 import PremiumTools from "@/pages/Dashboard/PremiumTools.jsx"; 
 import Navbar from "@/layouts/Navbar.jsx";
 import Sidebar from "@/layouts/Sidebar.jsx";
-import ToggleIcon from "@/assets/icons/Vector.svg";
+
 
 // URL รูปกราฟหน้า MIT
 const CHART_IMAGE_URL =
@@ -102,19 +102,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-[#0B0E14] text-white overflow-hidden font-sans">
-      {/* 🔹 ToggleIcon (แสดงเฉพาะตอนปิด) */}
-      {/* {collapsed && (
-        <button
-          onClick={() => setCollapsed(false)}
-          className="fixed top-16 left-3 z-50
-          w-10 h-10 rounded-xl
-          bg-[#0c0f14] border border-white/10
-          flex items-center justify-center
-          hover:bg-white/10 transition"
-        >
-          <img src={ToggleIcon} className="w-4 opacity-70 rotate-180" />
-        </button>
-      )} */}
       {/* Sidebar */}
       <Sidebar
         collapsed={collapsed}
@@ -136,7 +123,7 @@ export default function Dashboard() {
         }`}
       >
         <div className="p-8 pb-20">
-          <Navbar activePage={activePage} setActivePage={setActivePage} />
+          {/* <Navbar activePage={activePage} setActivePage={setActivePage} /> */}
 
           {/* ===== Preview Projects ===== */}
           {(activePage === "preview-projects" ||

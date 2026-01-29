@@ -36,20 +36,12 @@ export default function Shortcuts() {
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </p>
         </div>
-
-        {/* MIT Button */}
-          <button
-            onClick={() => navigate("/mit")}
-            className="bg-[#cca300] hover:bg-[#b38f00] text-white px-6 py-2.5 rounded-full font-semibold transition shadow-md whitespace-nowrap"
-          >
-            MIT
-          </button>
         
         <button
           onClick={() => navigate("/member-register")}
           className="bg-[#0099ff] hover:bg-[#007acc] text-white px-6 py-2.5 rounded-full font-medium transition shadow-lg whitespace-nowrap"
         >
-          Get more subscription
+          Upgrade subscription
         </button>
       </div>
 
@@ -83,7 +75,7 @@ export default function Shortcuts() {
               onClick={() => handleOpenTool(tool.id)}
               className="w-full mt-2 py-2.5 rounded-full bg-[#cca300] hover:bg-[#b38f00] text-white font-semibold transition shadow-md"
             >
-              JOIN MEMBERSHIP
+              Open premium tool
             </button>
           </div>
         ))}

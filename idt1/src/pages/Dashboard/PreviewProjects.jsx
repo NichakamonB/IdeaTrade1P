@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import mitIcon from "@/assets/icons/mit.svg";
+import mitIcon from "@/assets/icons/amit.svg";
 
 /* =======================
    Project Data
@@ -132,35 +132,83 @@ export default function PreviewProjects() {
           Accessible Beta Tools
         </h1>
 
-        <div className="bg-[#1f3446] rounded-2xl p-6 flex flex-col gap-6">
-          <div className="flex items-start justify-between">
-            <div className="flex gap-4">
-              <img
-                src={mitIcon}
-                alt="MIT"
-                className="w-12 h-12 rounded-lg"
-              />
-              <div>
-                <h2 className="text-xl font-semibold text-white">
-                  MIT : Multi-Agent Intelligent Analyst
-                </h2>
-                <p className="text-sm text-slate-300 max-w-2xl mt-1">
-                  Multi-agent AI system that debates, validates risk,
-                  and delivers objective trading insights.
-                </p>
-              </div>
+        <div className="bg-[#263C4F] rounded-2xl p-6 md:p-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div className="flex gap-4 w-full">
+            {/* Icon */}
+            <div className="w-12 h-12 rounded-xl bg-[#1B2E3E] flex items-center justify-center shrink-0">
+              <img src={mitIcon} alt="MIT" className="w-7 h-7" />
             </div>
 
-            <button
-              onClick={handleOpenMIT}
-              className="bg-sky-600 hover:bg-sky-500 px-5 py-2 rounded-full
-                         text-white text-sm transition"
-            >
-              Open MIT
-            </button>
+            {/* Content */}
+            <div className="flex-1 w-full">
+              {/* ===== Title Row ===== */}
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <h2 className="text-xl md:text-2xl font-semibold text-white">
+                  MIT : Multi-Agent Intelligent Analyst
+                </h2>
+
+                <button
+                  onClick={handleOpenMIT}
+                  className="bg-[#0B78B8] hover:bg-[#0E8ED8]
+                            px-5 py-2 rounded-full
+                            text-white text-sm font-semibold
+                            transition flex items-center gap-2 shrink-0"
+                >
+                  <img src={mitIcon} className="w-4 h-4" />
+                  Open MIT
+                </button>
+              </div>
+
+              {/* ===== Description (FULL WIDTH) ===== */}
+              <p className="text-sm text-slate-300 mt-2 leading-relaxed w-full">
+                Experience the next level of trading with our Multi-Agent LLM system
+                that simulates a professional institutional research team. By assigning
+                specific roles to multiple AI agents, the system engages in rigorous
+                data debates to eliminate bias, providing you with the most objective
+                and high-probability trading insights available.
+              </p>
+            </div>
           </div>
         </div>
-      </section>
+
+    {/* Feature Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+      {[
+        {
+          title: "Role-Based AI Analysis",
+          desc: "Strategic collaboration between 4 specialized AI teams: Analyst, Research, Risk Management, and Trader. This ensures every market move is vetted from every professional angle.",
+        },
+        {
+          title: "Bull vs. Bear Debate",
+          desc: "Our proprietary debate engine pits 'Bullish' vs. 'Bearish' AI agents against each other to challenge assumptions and deliver balanced, bias-free market conclusions.",
+        },
+        {
+          title: "Smart Execution & Risk Guard",
+          desc: "Receive clear Buy/Sell/Hold signals with logical justification. The system includes an automated 'Risk Vet' that can veto recommendations if market volatility exceeds safety limits.",
+        },
+        {
+          title: "Real-time Intel & Backtesting",
+          desc: "Access live market reports and verify strategies with our integrated backtesting engine. See how AI-driven decisions would have performed in historical cycles before you commit.",
+        },
+      ].map((item, idx) => (
+        <div
+          key={idx}
+          className="bg-[#1B2E3E] rounded-xl p-5
+                     border border-white/5"
+        >
+          <h3 className="font-semibold text-sm text-white mb-2">
+            {item.title}
+          </h3>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            {item.desc}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
 
       {/* ===== OTHER PROJECTS ===== */}
       <section>
