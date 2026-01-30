@@ -31,7 +31,7 @@ export default function Shortcuts() {
       {/* ===== Header Section ===== */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-white mb-3">Premium Tools</h1>
+          <h1 className="text-4xl font-bold text-white mb-3">Membership Tools</h1>
           <p className="text-gray-400 text-sm max-w-3xl">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
           </p>
