@@ -33,6 +33,13 @@ export default function OtpModal({ open, onClose, onSuccess }) {
     return () => clearInterval(interval);
   }, [open]);
 
+  /* 🕒 Format time MM:SS */
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   /* 🔢 Handle OTP input */
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
@@ -82,8 +89,7 @@ export default function OtpModal({ open, onClose, onSuccess }) {
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-lg rounded-2xl
-                      bg-slate-900 text-white p-6 shadow-xl">
+      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-slate-900 text-white p-6 shadow-xl">
 
         {/* Header */}
         <div className="flex items-center gap-2 mb-4 relative">
@@ -95,17 +101,16 @@ export default function OtpModal({ open, onClose, onSuccess }) {
             onMouseEnter={() => setShowTip(true)}
             onMouseLeave={() => setShowTip(false)}
           >
-            <span className="w-5 h-5 rounded-full border border-white/40
-                             flex items-center justify-center text-xs cursor-pointer">
+            <span className="w-5 h-5 rounded-full border border-white/40 flex items-center justify-center text-xs cursor-pointer">
               ?
             </span>
 
             {showTip && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3
-                w-72 p-3 rounded-lg text-xs text-gray-200
-                bg-slate-700 shadow-lg z-50
-              ">
-                OTP (One-Time Password) is a one-time code for authenticating online transactions. Delivered through email, it acts as a security key to verify your identity. Keep it secret and never share it with others.
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-3 rounded-lg text-xs text-gray-200 bg-slate-700 shadow-lg z-50">
+                OTP (One-Time Password) is a one-time code for authenticating
+                online transactions. Delivered through email, it acts as a
+                security key to verify your identity. Keep it secret and never
+                share it with others.
               </div>
             )}
           </div>
@@ -147,7 +152,7 @@ export default function OtpModal({ open, onClose, onSuccess }) {
           className={`text-center text-sm mb-1
             ${status === "error" ? "text-red-500" : "text-gray-300"}`}
         >
-          Please fill within 5 minutes ({(timeLeft / 60).toFixed(2)} min left)
+          Please fill within 5 minutes ({formatTime(timeLeft)} left)
         </p>
 
         {/* OTP Sent Text */}
@@ -163,8 +168,7 @@ export default function OtpModal({ open, onClose, onSuccess }) {
         {/* Resend */}
         <p
           onClick={resendOtp}
-          className="text-center text-sm text-gray-500 mt-2
-                     cursor-pointer hover:text-white"
+          className="text-center text-sm text-gray-500 mt-2 cursor-pointer hover:text-white"
         >
           Don&apos;t get OTP? <span className="underline">Send again</span>
         </p>
