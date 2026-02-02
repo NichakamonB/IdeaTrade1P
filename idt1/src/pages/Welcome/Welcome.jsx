@@ -9,14 +9,27 @@ import OtpModal from "@/components/OtpModal";
 
 export default function Welcome() {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [remember, setRemember] = useState(false);
-  const [popupType, setPopupType] = useState(""); 
-  const [openError, setOpenError] = useState(false);
+
+  const [popupType, setPopupType] = useState("");
   const [openForgot, setOpenForgot] = useState(false);
   const [openOtp, setOpenOtp] = useState(false);
 
-   const setFreeAccess = () => {
+  /* ======================
+     EMAIL VALIDATION
+  ====================== */
+  const isValidEmail = (email) => {
+  const emailRegex =
+    /^[^\s@]+@(gmail\.com|yahoo\.com|hotmail\.com|outlook\.com|company\.co\.th|university\.ac\.th)$/;
+  return emailRegex.test(email);
+  };
+
+  /* ======================
+     LOGIN ACTIONS
+  ====================== */
+  const setFreeAccess = () => {
     localStorage.setItem(
       "userProfile",
       JSON.stringify({
@@ -35,25 +48,21 @@ export default function Welcome() {
         unlockedItems: [],
       })
     );
-        navigate("/dashboard", {
+    navigate("/dashboard", {
       state: { goTo: "premiumtools" },
     });
   };
 
   const handleGoogleLogin = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-
-    const user = result.user;
-    console.log("Google User:", user);
-
-    // 👉 ล็อกอินสำเร็จ พาไป dashboard
-    navigate("/dashboard");
-  } catch (error) {
-    console.error("Google Sign-In Error:", error);
-    alert("Google Sign-In failed");
-  }
-};
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("Google User:", result.user);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+      alert("Google Sign-In failed");
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-700">
@@ -80,47 +89,49 @@ export default function Welcome() {
           <div className="flex flex-col justify-center gap-5 text-white">
             {/* Email */}
             <div className="relative w-full">
-            <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder=" "
-            className="peer w-full bg-transparent border border-blue-300/40
-                      rounded-md px-4 py-3 text-white
-                      focus:border-blue-500 outline-none"
-            />
-            <label
-              className="
-                absolute left-4 top-3
-                px-2 py-0.5
-                rounded-full
-                text-sm text-blue-300
-                transition-all duration-200
-                bg-transparent
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder=" "
+                className="
+                  peer w-full bg-transparent
+                  border border-blue-300/40
+                  rounded-md px-4 py-3 text-white
+                  focus:border-blue-500 outline-none
+                "
+              />
+              <label
+                className="
+                  absolute left-4 top-3
+                  px-2 py-0.5 rounded-full
+                  text-sm text-blue-300
+                  transition-all duration-200
+                  bg-transparent
 
-                peer-focus:-top-3
-                peer-focus:text-xs
-                peer-focus:text-sky-400
-                peer-focus:bg-slate-800
+                  peer-focus:-top-3
+                  peer-focus:text-xs
+                  peer-focus:text-sky-400
+                  peer-focus:bg-slate-800
 
-                peer-not-placeholder-shown:-top-3
-                peer-not-placeholder-shown:text-xs
-                peer-not-placeholder-shown:text-sky-400
-                peer-not-placeholder-shown:bg-slate-800
-              "
-            >
-              EMAIL
-            </label>
-          </div>
+                  peer-not-placeholder-shown:-top-3
+                  peer-not-placeholder-shown:text-xs
+                  peer-not-placeholder-shown:text-sky-400
+                  peer-not-placeholder-shown:bg-slate-800
+                "
+              >
+                EMAIL
+              </label>
+            </div>
 
             {/* Options */}
             <div className="flex justify-between items-center text-sm">
               <label className="flex items-center gap-2">
                 <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />
                 Remember me
               </label>
             </div>
@@ -128,13 +139,21 @@ export default function Welcome() {
             {/* Sign in */}
             <button
               onClick={() => {
+                // ❌ ยังไม่กรอกอีเมล
                 if (!email) {
                   setPopupType("emailRequired");
                   setOpenForgot(true);
                   return;
                 }
 
-                // 👉 ส่ง OTP + เปิด modal
+                // ❌ อีเมลผิดรูปแบบ
+                if (!isValidEmail(email)) {
+                  setPopupType("emailInvalid");
+                  setOpenForgot(true);
+                  return;
+                }
+
+                // ✅ อีเมลถูกต้อง
                 setOpenOtp(true);
               }}
               className="mt-2 py-3 rounded-lg bg-sky-600 text-lg font-semibold"
@@ -156,94 +175,83 @@ export default function Welcome() {
 
         {/* Bottom CTA */}
         <div className="bg-slate-700/50 px-16 py-10 flex flex-col md:flex-row gap-8 justify-between">
-        <button
-          onClick={setFreeAccess}
-          className="flex-1 py-5 rounded-xl bg-emerald-400 text-white text-xl font-semibold
-                    flex items-center justify-center gap-3"
-        >
-          <img src={Rocket} alt="rocket" className="w-6 h-6" />
-          TRY FREE VERSION
-        </button>
+          <button
+            onClick={setFreeAccess}
+            className="flex-1 py-5 rounded-xl bg-emerald-400 text-white text-xl font-semibold
+                       flex items-center justify-center gap-3"
+          >
+            <img src={Rocket} alt="rocket" className="w-6 h-6" />
+            TRY FREE VERSION
+          </button>
 
-        <button
-          onClick={setMembership}
-          className="flex-1 py-5 rounded-xl bg-sky-600 text-white text-xl font-semibold
-                    flex items-center justify-center gap-3"
-        >
-          <img src={Crown} alt="crown" className="w-6 h-6" />
-          JOIN MEMBERSHIP
-        </button>
-      </div>
+          <button
+            onClick={setMembership}
+            className="flex-1 py-5 rounded-xl bg-sky-600 text-white text-xl font-semibold
+                       flex items-center justify-center gap-3"
+          >
+            <img src={Crown} alt="crown" className="w-6 h-6" />
+            JOIN MEMBERSHIP
+          </button>
+        </div>
       </div>
 
-        {/* OTP Modal */}
-          <OtpModal
-            open={openOtp}
-            onClose={() => setOpenOtp(false)}
-            onSuccess={() => {
-              setOpenOtp(false);
-              setFreeAccess(); // หรือ navigate ตาม role
-            }}
-          />
+      {/* OTP Modal */}
+      <OtpModal
+        open={openOtp}
+        onClose={() => setOpenOtp(false)}
+        onSuccess={() => {
+          setOpenOtp(false);
+          setFreeAccess();
+        }}
+      />
 
       {/* ================= POPUP ================= */}
       {openForgot && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* Overlay */}
-        <div
-          className="absolute inset-0 bg-black/60"
-          onClick={() => setOpenForgot(false)}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setOpenForgot(false)}
+          />
 
-        {/* Modal */}
-        <div className="relative z-10 w-full max-w-md rounded-2xl
-                        bg-slate-800 text-white p-6 shadow-xl">
+          {/* Forgot enter email */}
+          <div className="relative z-10 w-full max-w-md rounded-2xl
+                          bg-slate-800 text-white p-6 shadow-xl">
 
-          {popupType === "forgot" && (
-            <>
-              <h3 className="text-xl font-semibold mb-2">
-                Forget your ID or password?
-              </h3>
+            {popupType === "emailRequired" && (
+              <>
+                <h3 className="text-xl font-semibold mb-2 text-red-400">
+                  Please enter your email
+                </h3>
+                <p className="text-sm text-gray-300 mb-5">
+                  Please enter your email before signing in.
+                </p>
+              </>
+            )}
 
-              {/* <p className="text-sm text-gray-300 mb-5">
-                <br />
-                Your ID is:{" "}
-                <span className="font-semibold text-sky-600">
-                  your Email address.
-                </span>
-                <br />
-                Your Password is:{" "}
-                <span className="font-semibold text-sky-600">
-                  your Phone number.
-                </span>
-              </p> */}
-            </>
-          )}
+            {/* Invalid email */}
+            {popupType === "emailInvalid" && (
+              <>
+                <h3 className="text-xl font-semibold mb-2 text-red-400">
+                  Invalid email address
+                </h3>
+                <p className="text-sm text-gray-300 mb-5">
+                  Please enter a valid email address again !!
+                </p>
+              </>
+            )}
 
-          {/* Popup for email required */}
-          {popupType === "emailRequired" && (
-            <>
-              <h3 className="text-xl font-semibold mb-2 text-red-400">
-                Please enter your email 
-              </h3>
-
-              <p className="text-sm text-gray-300 mb-5">
-                Please enter your email before signing in.
-              </p>
-            </>
-          )}
-
-          <div className="flex justify-end">
-            <button
-              onClick={() => setOpenForgot(false)}
-              className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
-            >
-              Close
-            </button>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setOpenForgot(false)}
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </div>
   );
 }
