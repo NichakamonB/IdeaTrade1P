@@ -7,7 +7,6 @@ import PremiumTools from "@/pages/Dashboard/PremiumTools.jsx";
 import Navbar from "@/layouts/Navbar.jsx";
 import Sidebar from "@/layouts/Sidebar.jsx";
 
-
 // URL รูปกราฟหน้า MIT
 const CHART_IMAGE_URL =
   "https://images.unsplash.com/photo-1611974765270-ca1258634369?q=80&w=1964&auto=format&fit=crop";
@@ -19,7 +18,6 @@ function BlurContent({ isLocked, title, children }) {
   const navigate = useNavigate();
 
   return (
-    
     <div className="relative w-full h-full mb-8">
       <div
         className={`transition-all duration-300 ${
@@ -49,7 +47,7 @@ function BlurContent({ isLocked, title, children }) {
                   state: { goTo: "premiumtools" },
                 })
               }
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold hover:brightness-110 transition shadow-lg"
+              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold hover:brightness-110 transition shadow-lg cursor-pointer"
             >
               อัปเกรดสมาชิก
             </button>
@@ -114,12 +112,15 @@ export default function Dashboard() {
             setActivePage(page);
           }
         }}
+        // เพิ่มบรรทัดนี้เพื่อให้ Sidebar สั่งเปลี่ยนหน้าได้จริง (ตามโค้ด Sidebar ก่อนหน้า)
+        openProject={(p) => setActivePage(p.id)}
       />
 
-      {/* Main */}
+      {/* Main Content */}
       <main
+        // 🔴 จุดที่แก้ไข: ปรับ Margin ให้ตรงกับขนาด Sidebar (80px ตอนย่อ, 280px ตอนขยาย)
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
-          collapsed ? "ml-0" : "ml-72"
+          collapsed ? "ml-[80px]" : "ml-[280px]"
         }`}
       >
         <div className="p-8 pb-20">
@@ -156,7 +157,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
-                    <button onClick={() => navigate("/member-register")} className="px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-[0_0_20px_rgba(6,182,212,0.5)]">
+                    <button onClick={() => navigate("/member-register")} className="px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-[0_0_20px_rgba(6,182,212,0.5)] cursor-pointer">
                         Start Using Tool
                     </button>
                 </div>

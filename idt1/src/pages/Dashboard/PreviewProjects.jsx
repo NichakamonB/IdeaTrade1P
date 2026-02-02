@@ -219,19 +219,25 @@ export default function PreviewProjects() {
         {projects.map((project) => {
           const isUnlocked = canAccess(project);
 
+          // ✅ จุดที่แก้ไข: กำหนดสีพื้นหลังตามเงื่อนไข (Premium + Unlocked = สีทองเข้ม, อื่นๆ = สีเทา)
+          const cardBackground = (project.premium && isUnlocked)
+              ? "bg-[#3e3205]"
+              : "bg-[#606060]"; // หมายเหตุ: สีเดิมคือ bg-[#3a3a3a] หากต้องการสีเดิมให้แก้ตรงนี้ครับ
+
           return (
             <div
               key={project.id}
-              className="
-                bg-[#3a3a3a]
+              className={`
+                ${cardBackground}
                 rounded-xl
                 p-6
                 flex flex-col gap-4
                 border border-transparent
                 hover:border-gray-500
                 transition duration-200
-              "
+              `}
             >
+              
               {/* ===== Header ===== */}
               <div className="flex items-center gap-4">
                 <div

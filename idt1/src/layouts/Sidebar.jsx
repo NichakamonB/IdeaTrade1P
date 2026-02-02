@@ -63,12 +63,12 @@ const projects = [
 
 /* ================= CROWN ================= */
 const CrownIcon = ({ color }) => (
-  <svg viewBox="0 0 24 24" className="w-4 h-4" fill={color}>
+  <svg viewBox="0 0 24 24" className="w-4 h-4 pointer-events-none" fill={color}>
     <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19H5V18H19V19Z" />
   </svg>
 );
 
-/* ================= SIDEBAR ================= */
+/* ================= SIDEBAR COMPONENT ================= */
 export default function Sidebar({
   collapsed,
   setCollapsed,
@@ -81,182 +81,185 @@ export default function Sidebar({
   const [unlockedList, setUnlockedList] = useState([]);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("userProfile");
-    if (!savedUser) return;
-    const user = JSON.parse(savedUser);
-    setUnlockedList(user.unlockedItems || []);
-    setIsMember(user.role === "member" || user.unlockedItems?.length > 0);
+    try {
+      const savedUser = localStorage.getItem("userProfile");
+      if (!savedUser) return;
+      const user = JSON.parse(savedUser);
+      setUnlockedList(user.unlockedItems || []);
+      setIsMember(user.role === "member" || user.unlockedItems?.length > 0);
+    } catch (e) {
+      console.error("Error parsing user profile", e);
+    }
   }, []);
 
   /* ================= AUTH ACTIONS ================= */
-  const handleSignUp = () => {
-    navigate("/register");
-  };
+  const handleSignUp = () => navigate("/register");
+  const handleSignIn = () => navigate("/welcome");
 
-  const handleSignIn = () => {
-    navigate("/welcome");
-  };
-
-  /* ================= COLLAPSED ================= */
-  if (collapsed) {
-    return (
-      <button
-        onClick={() => setCollapsed(false)}
-        className="fixed left-0 top-16 z-50 w-9 h-9 rounded-r-xl
-        bg-[#0c0f14] border border-white/10 border-l-0
-        flex items-center justify-center hover:bg-white/10"
-      >
-        <img src={ToggleIcon} className="w-4 rotate-180 opacity-70" />
-      </button>
-    );
-  }
-
-  /* ================= EXPANDED ================= */
   return (
-    <aside className="fixed top-0 left-0 z-40 w-[280px] h-screen
-      bg-gradient-to-b from-[#0c0f14] to-[#0a0d11]
-      border-r border-white/10 flex flex-col">
+    <>
+      {/* 🔥 เพิ่ม Style ตรงนี้เพื่อซ่อน Scrollbar แต่ยังเลื่อนได้ 🔥 */}
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
 
-      {/* Logo */}
-      <div className="px-6 py-6 flex justify-between items-center">
-        <img src={logo} className="w-36" />
-        <button onClick={() => setCollapsed(true)}>
-          <img src={ToggleIcon} className="w-4 opacity-60" />
-        </button>
-      </div>
+      <aside
+        className={`fixed top-0 left-0 z-50 h-screen bg-gradient-to-b from-[#0c0f14] to-[#0a0d11] border-r border-white/10 flex flex-col transition-all duration-300 overflow-hidden ${
+          collapsed ? "w-[80px] items-center py-4" : "w-[280px]"
+        }`}
+      >
+        {/* ================= HEADER & LOGO ================= */}
+        <div className={`flex items-center shrink-0 transition-all duration-300 ${collapsed ? "flex-col-reverse gap-6 mb-4" : "justify-between px-6 py-6"}`}>
+          {!collapsed && <img src={logo} className="w-36 transition-opacity object-contain pointer-events-none" alt="logo" />}
 
-      {/* Status */}
-      <div className="px-6 flex gap-2 text-[11px]">
-        <span
-          className={`px-2 py-1 rounded-full
-          ${isMember
-            ? "bg-yellow-500/20 text-yellow-400"
-            : "bg-sky-500/20 text-sky-400"}`}
-        >
-          {isMember ? "MEMBERSHIP" : "FREE ACCESS"}
-        </span>
-        <span className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400">
-          STATUS: ONLINE
-        </span>
-      </div>
-
-      {/* Menu */}
-      <nav className="flex-1 px-3 mt-6 text-sm overflow-y-auto">
-
-        {/* Preview */}
-        <button
-          onClick={() => setActivePage("preview-projects")}
-          className={`w-full h-11 px-4 rounded-lg flex items-center
-          ${activePage === "preview-projects"
-            ? "bg-slate-800 text-white"
-            : "hover:bg-white/5 text-gray-300"}`}
-        >
-          <img
-            src={getIcon("preview", activePage === "preview-projects")}
-            className="w-5 mr-3"
-          />
-          Preview Projects
-        </button>
-
-        {/* Beta */}
-        <div className="mt-6 mb-2 px-2 text-[11px] uppercase text-gray-500">
-          Beta Tools
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className={`transition-all hover:opacity-100 p-1 rounded-full hover:bg-white/5 ${collapsed ? "opacity-60 rotate-180" : "opacity-60"}`}
+          >
+            <img src={ToggleIcon} className="w-4 pointer-events-none" alt="toggle" />
+          </button>
         </div>
 
-        <button
-          onClick={() => setActivePage("mit")}
-          className={`w-full h-11 px-4 rounded-lg flex items-center justify-between
-          ${activePage === "mit"
-            ? "bg-slate-800 text-white"
-            : "hover:bg-white/5 text-gray-300"}`}
-        >
-          <div className="flex items-center gap-3">
-            <img src={getIcon("mit", activePage === "mit")} className="w-5" />
-            MIT
-          </div>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-400 text-black">
-            FREE
-          </span>
-        </button>
-
-        {/* Membership */}
-        <div className="mt-6 mb-2 px-2 text-[11px] uppercase text-gray-500">
-          Membership Tools
+        {/* ================= STATUS BADGES ================= */}
+        <div className={`flex shrink-0 transition-all duration-300 ${collapsed ? "flex-col gap-1 w-full px-2 mb-4" : "flex-row gap-2 px-6 mb-2"}`}>
+           <div className={`font-bold rounded border flex items-center justify-center transition-all whitespace-nowrap overflow-hidden
+             ${isMember ? "text-yellow-400 border-yellow-500/30 bg-yellow-500/10" : "text-sky-400 border-sky-500/30 bg-sky-500/10"}
+             ${collapsed ? "text-[8px] py-1 w-full" : "text-[11px] px-2 py-1 rounded-full"}`}
+           >
+               {collapsed ? (isMember ? "MEMBER" : "FREE") : (isMember ? "MEMBERSHIP" : "FREE ACCESS")}
+           </div>
+           
+           <div className={`font-bold rounded border text-emerald-400 border-emerald-500/30 bg-emerald-500/10 flex items-center justify-center transition-all whitespace-nowrap overflow-hidden
+             ${collapsed ? "text-[8px] py-1 w-full" : "text-[11px] px-2 py-1 rounded-full"}`}
+           >
+               {collapsed ? "ONLINE" : "STATUS: ONLINE"}
+           </div>
         </div>
 
-        {projects.map((p) => {
-          const active = activePage === p.id;
-          const unlocked = unlockedList.includes(p.id);
+        {/* ================= MENU ITEMS (ใส่ class no-scrollbar) ================= */}
+        <nav className={`flex-1 overflow-y-auto no-scrollbar w-full ${collapsed ? "px-2 flex flex-col items-center gap-2" : "px-3 mt-4"}`}>
+          
+          {/* Preview Button */}
+          <button
+            onClick={() => setActivePage("preview-projects")}
+            className={`rounded-lg flex items-center shrink-0 transition-all cursor-pointer relative group
+            ${activePage === "preview-projects" ? "bg-slate-800 text-white" : "hover:bg-white/5 text-gray-300"}
+            ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
+            title="Preview Projects"
+          >
+            <img src={getIcon("preview", activePage === "preview-projects")} className="w-5 pointer-events-none" alt="preview" />
+            {!collapsed && <span className="pointer-events-none">Preview Projects</span>}
+          </button>
 
-          return (
-            <button
-              key={p.id}
-              onClick={() => {
-                setActivePage(p.id);
-                openProject?.(p);
-              }}
-              className={`w-full h-11 px-4 rounded-lg flex items-center justify-between
-              ${active ? "bg-slate-800" : "hover:bg-white/5"}`}
-            >
-              <div
-                className={`flex items-center gap-3 font-medium
-                ${unlocked
-                  ? "text-yellow-400"
-                  : active ? "text-white" : "text-gray-400"}`}
+          {/* Beta Label */}
+          {collapsed ? <div className="w-8 h-[1px] bg-white/10 my-1 shrink-0" /> : <div className="mt-6 mb-2 px-2 text-[11px] uppercase text-gray-500 shrink-0">Beta Tools</div>}
+
+          {/* MIT Button */}
+          <button
+            onClick={() => setActivePage("mit")}
+            className={`rounded-lg flex items-center shrink-0 transition-all relative cursor-pointer
+            ${activePage === "mit" ? "bg-slate-800 text-white" : "hover:bg-white/5 text-gray-300"}
+            ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 justify-between"}`}
+            title="MIT"
+          >
+             <div className={`flex items-center gap-3 pointer-events-none ${collapsed ? "justify-center w-full" : ""}`}>
+               <img src={getIcon("mit", activePage === "mit")} className="w-5" alt="mit" />
+               {!collapsed && <span>MIT</span>}
+             </div>
+             
+             {/* Free Badge */}
+             {collapsed ? (
+               <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 pointer-events-none"></span>
+             ) : (
+               <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-400 text-black pointer-events-none">FREE</span>
+             )}
+          </button>
+
+          {/* Member Label */}
+          {collapsed ? <div className="w-8 h-[1px] bg-white/10 my-1 shrink-0" /> : <div className="mt-6 mb-2 px-2 text-[11px] uppercase text-gray-500 shrink-0">Membership Tools</div>}
+
+          {/* Project List */}
+          {projects.map((p) => {
+            const active = activePage === p.id;
+            const unlocked = unlockedList.includes(p.id);
+
+            return (
+              <button
+                key={p.id}
+                onClick={() => { setActivePage(p.id); if(openProject) openProject(p); }}
+                className={`rounded-lg flex items-center shrink-0 transition-all mb-1 cursor-pointer
+                ${active ? "bg-slate-800" : "hover:bg-white/5"}
+                ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 justify-between"}`}
+                title={p.name}
               >
-                <img
-                  src={getIcon(p.iconKey, active)}
-                  className="w-5"
-                  style={unlocked ? {
-                    filter:
-                      "brightness(0) saturate(100%) invert(88%) sepia(21%) saturate(6972%) hue-rotate(359deg) brightness(101%) contrast(104%)",
-                  } : {}}
-                />
-                {p.name}
-              </div>
-              <CrownIcon color="#facc15" />
-            </button>
-          );
-        })}
+                 <div className={`flex items-center gap-3 font-medium transition-colors pointer-events-none
+                   ${unlocked ? "text-yellow-400" : active ? "text-white" : "text-gray-400"}
+                   ${collapsed ? "justify-center w-full" : ""}`}
+                 >
+                    <img 
+                      src={getIcon(p.iconKey, active)} 
+                      className="w-5 transition-all" 
+                      alt={p.name}
+                      style={unlocked ? { filter: "brightness(0) saturate(100%) invert(88%) sepia(21%) saturate(6972%) hue-rotate(359deg) brightness(101%) contrast(104%)" } : {}}
+                    />
+                    {!collapsed && <span>{p.name}</span>}
+                 </div>
+                 
+                 {!collapsed && <CrownIcon color="#facc15" />}
+              </button>
+            );
+          })}
 
-        {/* Account */}
-        <div className="mt-6 mb-2 px-2 text-[11px] uppercase text-gray-500">
-          Account
+          {/* Account Label */}
+          {collapsed ? <div className="w-8 h-[1px] bg-white/10 my-1 shrink-0" /> : <div className="mt-6 mb-2 px-2 text-[11px] uppercase text-gray-500 shrink-0">Account</div>}
+
+          <button
+            onClick={handleSignUp}
+            className={`rounded-lg flex items-center shrink-0 transition-all mb-1 hover:bg-white/5 text-gray-300 cursor-pointer
+            ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
+            title="Sign Up"
+          >
+             <img src={signupIcon} alt="Sign Up" className="w-5 opacity-80 pointer-events-none" />
+             {!collapsed && <span className="pointer-events-none">Sign Up</span>}
+          </button>
+
+          <button
+            onClick={handleSignIn}
+            className={`rounded-lg flex items-center shrink-0 transition-all hover:bg-white/5 text-gray-300 cursor-pointer
+            ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
+            title="Sign In"
+          >
+             <img src={signinIcon} alt="Sign In" className="w-5 opacity-80 pointer-events-none" />
+             {!collapsed && <span className="pointer-events-none">Sign In</span>}
+          </button>
+
+          <div className="h-10 shrink-0" />
+        </nav>
+
+        {/* ================= FOOTER ================= */}
+        {/* ใช้ justify-center เพื่อจัดกลาง และ pb-4 เพื่อดันขึ้นจากขอบล่างนิดนึง */}
+        <div className={`px-2 pb-2 w-full flex justify-center shrink-0`}>
+          <button
+            onClick={() => setActivePage("premiumtools")}
+            className={`flex items-center justify-center transition-all shadow-lg overflow-hidden shrink-0 cursor-pointer
+            ${collapsed 
+              ? "w-10 h-10 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-400" 
+              : "w-full h-11 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-400 text-black font-semibold gap-2"}`}
+            title="Join Membership"
+          >
+            {/* สีไอคอนสีดำ เพื่อให้ตัดกับพื้นหลังสีทอง */}
+            <CrownIcon color="#000" />
+            {!collapsed && <span className="whitespace-nowrap pointer-events-none">Join Membership</span>}
+          </button>
         </div>
 
-        <button
-        onClick={handleSignUp}
-        className="w-full h-11 px-4 rounded-lg flex items-center gap-3
-        hover:bg-white/5 text-gray-300"
-      >
-        <img src={signupIcon} alt="Sign Up" className="w-5 opacity-80" />
-        Sign Up
-      </button>
-
-        <button
-        onClick={handleSignIn}
-        className="w-full h-11 px-4 rounded-lg flex items-center gap-3
-        hover:bg-white/5 text-gray-300"
-      >
-        <img src={signinIcon} alt="Sign In" className="w-5 opacity-80" />
-        Sign In
-      </button>
-
-        <div className="h-10" />
-      </nav>
-
-      {/* Join Membership */}
-      <div className="px-4 pb-6">
-        <button
-          onClick={() => setActivePage("premiumtools")}
-          className="w-full h-11 rounded-xl
-          bg-gradient-to-r from-yellow-400 to-amber-400
-          text-black font-semibold flex items-center justify-center gap-2"
-        >
-          <CrownIcon color="#000" />
-          Join Membership
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
