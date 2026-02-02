@@ -89,40 +89,40 @@ export default function Welcome() {
           <div className="flex flex-col justify-center gap-5 text-white">
             {/* Email */}
             <div className="relative w-full">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder=" "
-                className="
-                  peer w-full bg-transparent
-                  border border-blue-300/40
-                  rounded-md px-4 py-3 text-white
-                  focus:border-blue-500 outline-none
-                "
-              />
-              <label
-                className="
-                  absolute left-4 top-3
-                  px-2 py-0.5 rounded-full
-                  text-sm text-blue-300
-                  transition-all duration-200
-                  bg-transparent
+  <input
+    type="email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    className="
+      peer w-full bg-transparent
+      border border-blue-300/40
+      rounded-md px-4 py-3 text-white
+      focus:border-blue-500 outline-none
+    "
+  />
 
-                  peer-focus:-top-3
-                  peer-focus:text-xs
-                  peer-focus:text-sky-400
-                  peer-focus:bg-slate-800
+  <label
+    className={`
+      absolute left-4
+      px-2 py-0.5 rounded-full
+      text-sm transition-all duration-200
 
-                  peer-not-placeholder-shown:-top-3
-                  peer-not-placeholder-shown:text-xs
-                  peer-not-placeholder-shown:text-sky-400
-                  peer-not-placeholder-shown:bg-slate-800
-                "
-              >
-                EMAIL
-              </label>
-            </div>
+      ${
+        email
+          ? "-top-3 text-xs text-sky-400 bg-slate-800"
+          : "top-3 text-sm text-blue-300 bg-transparent"
+      }
+
+      peer-focus:-top-3
+      peer-focus:text-xs
+      peer-focus:text-sky-400
+      peer-focus:bg-slate-800
+    `}
+  >
+    EMAIL
+  </label>
+</div>
+
 
             {/* Options */}
             <div className="flex justify-between items-center text-sm">
