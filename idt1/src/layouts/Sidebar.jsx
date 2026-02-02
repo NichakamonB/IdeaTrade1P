@@ -27,6 +27,8 @@ import tickmatch from "@/assets/icons/tickmatch.svg";
 import atickmatch from "@/assets/icons/atickmatch.svg";
 import dr from "@/assets/icons/dr.svg";
 import adr from "@/assets/icons/adr.svg";
+import signinIcon from "@/assets/icons/signin.svg";
+import signupIcon from "@/assets/icons/signup.svg";
 
 /* ================= ICON MAP ================= */
 const sidebarIcons = {
@@ -86,18 +88,25 @@ export default function Sidebar({
     setIsMember(user.role === "member" || user.unlockedItems?.length > 0);
   }, []);
 
-  /* ================= COLLAPSED STATE ================= */
+  /* ================= AUTH ACTIONS ================= */
+  const handleSignUp = () => {
+    navigate("/register");
+  };
+
+  const handleSignIn = () => {
+    navigate("/welcome");
+  };
+
+  /* ================= COLLAPSED ================= */
   if (collapsed) {
     return (
       <button
         onClick={() => setCollapsed(false)}
-        className="fixed left-0 top-16 z-50 w-9 h-9 rounded-r-xl bg-[#0c0f14] border border-white/10 border-l-0 flex items-center justify-center transition hover:bg-white/10"
+        className="fixed left-0 top-16 z-50 w-9 h-9 rounded-r-xl
+        bg-[#0c0f14] border border-white/10 border-l-0
+        flex items-center justify-center hover:bg-white/10"
       >
-        <img
-          src={ToggleIcon}
-          className="w-4 opacity-70 rotate-180"
-          alt="toggle"
-        />
+        <img src={ToggleIcon} className="w-4 rotate-180 opacity-70" />
       </button>
     );
   }
@@ -110,9 +119,9 @@ export default function Sidebar({
 
       {/* Logo */}
       <div className="px-6 py-6 flex justify-between items-center">
-        <img src={logo} className="w-36" alt="logo" />
+        <img src={logo} className="w-36" />
         <button onClick={() => setCollapsed(true)}>
-          <img src={ToggleIcon} className="w-4 opacity-60" alt="toggle" />
+          <img src={ToggleIcon} className="w-4 opacity-60" />
         </button>
       </div>
 
@@ -142,7 +151,10 @@ export default function Sidebar({
             ? "bg-slate-800 text-white"
             : "hover:bg-white/5 text-gray-300"}`}
         >
-          <img src={getIcon("preview", activePage === "preview-projects")} className="w-5 mr-3" alt="preview" />
+          <img
+            src={getIcon("preview", activePage === "preview-projects")}
+            className="w-5 mr-3"
+          />
           Preview Projects
         </button>
 
@@ -159,7 +171,7 @@ export default function Sidebar({
             : "hover:bg-white/5 text-gray-300"}`}
         >
           <div className="flex items-center gap-3">
-            <img src={getIcon("mit", activePage === "mit")} className="w-5" alt="mit" />
+            <img src={getIcon("mit", activePage === "mit")} className="w-5" />
             MIT
           </div>
           <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-400 text-black">
@@ -184,40 +196,56 @@ export default function Sidebar({
                 openProject?.(p);
               }}
               className={`w-full h-11 px-4 rounded-lg flex items-center justify-between
-              ${active
-                ? "bg-slate-800"
-                : "hover:bg-white/5"}`}
+              ${active ? "bg-slate-800" : "hover:bg-white/5"}`}
             >
-              {/* 1. ส่วนชื่อและไอคอน */}
-              <div className={`flex items-center gap-3 font-medium transition-colors
-                ${unlocked 
-                  ? "text-yellow-400" // ซื้อแล้ว: สีทอง
-                  : active ? "text-white" : "text-gray-400"
-                }`}
+              <div
+                className={`flex items-center gap-3 font-medium
+                ${unlocked
+                  ? "text-yellow-400"
+                  : active ? "text-white" : "text-gray-400"}`}
               >
-                {/* 2. ส่วนไอคอน (ใช้ Filter ย้อมสีทองเมื่อ unlocked) */}
-                <img 
-                  src={getIcon(p.iconKey, active)} 
-                  className="w-5 transition-all"
-                  alt={p.name}
+                <img
+                  src={getIcon(p.iconKey, active)}
+                  className="w-5"
                   style={unlocked ? {
-                    // Filter นี้จะเปลี่ยนสีไอคอนให้เป็นสีทอง #facc15
-                    filter: "brightness(0) saturate(100%) invert(88%) sepia(21%) saturate(6972%) hue-rotate(359deg) brightness(101%) contrast(104%)"
+                    filter:
+                      "brightness(0) saturate(100%) invert(88%) sepia(21%) saturate(6972%) hue-rotate(359deg) brightness(101%) contrast(104%)",
                   } : {}}
                 />
                 {p.name}
               </div>
-              
-              {/* 3. ส่วนมงกุฎ (สีทองเสมอ) */}
               <CrownIcon color="#facc15" />
             </button>
           );
         })}
 
+        {/* Account */}
+        <div className="mt-6 mb-2 px-2 text-[11px] uppercase text-gray-500">
+          Account
+        </div>
+
+        <button
+        onClick={handleSignUp}
+        className="w-full h-11 px-4 rounded-lg flex items-center gap-3
+        hover:bg-white/5 text-gray-300"
+      >
+        <img src={signupIcon} alt="Sign Up" className="w-5 opacity-80" />
+        Sign Up
+      </button>
+
+        <button
+        onClick={handleSignIn}
+        className="w-full h-11 px-4 rounded-lg flex items-center gap-3
+        hover:bg-white/5 text-gray-300"
+      >
+        <img src={signinIcon} alt="Sign In" className="w-5 opacity-80" />
+        Sign In
+      </button>
+
         <div className="h-10" />
       </nav>
 
-      {/* Join Membership Button */}
+      {/* Join Membership */}
       <div className="px-4 pb-6">
         <button
           onClick={() => setActivePage("premiumtools")}

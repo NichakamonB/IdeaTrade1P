@@ -1,3 +1,4 @@
+// src/pages/Welcome/Welcome.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/images/logo.png";
@@ -6,6 +7,8 @@ import { auth, googleProvider } from "@/firebase";
 import Rocket from "@/assets/icons/rocket-lunch 1.svg";
 import Crown from "@/assets/icons/crown 1.svg";
 import OtpModal from "@/components/OtpModal";
+import signinIcon from "@/assets/icons/signin.svg";
+import signupIcon from "@/assets/icons/signup.svg";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -89,40 +92,39 @@ export default function Welcome() {
           <div className="flex flex-col justify-center gap-5 text-white">
             {/* Email */}
             <div className="relative w-full">
-  <input
-    type="email"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    className="
-      peer w-full bg-transparent
-      border border-blue-300/40
-      rounded-md px-4 py-3 text-white
-      focus:border-blue-500 outline-none
-    "
-  />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="
+                peer w-full bg-transparent
+                border border-blue-300/40
+                rounded-md px-4 py-3 text-white
+                focus:border-blue-500 outline-none
+              "
+            />
 
-  <label
-    className={`
-      absolute left-4
-      px-2 py-0.5 rounded-full
-      text-sm transition-all duration-200
+            <label
+              className={`
+                absolute left-4
+                px-2 py-0.5 rounded-full
+                text-sm transition-all duration-200
 
-      ${
-        email
-          ? "-top-3 text-xs text-sky-400 bg-slate-800"
-          : "top-3 text-sm text-blue-300 bg-transparent"
-      }
+                ${
+                  email
+                    ? "-top-3 text-xs text-sky-400 bg-slate-800"
+                    : "top-3 text-sm text-blue-300 bg-transparent"
+                }
 
-      peer-focus:-top-3
-      peer-focus:text-xs
-      peer-focus:text-sky-400
-      peer-focus:bg-slate-800
-    `}
-  >
-    EMAIL
-  </label>
-</div>
-
+                peer-focus:-top-3
+                peer-focus:text-xs
+                peer-focus:text-sky-400
+                peer-focus:bg-slate-800
+              `}
+            >
+              EMAIL
+            </label>
+          </div>
 
             {/* Options */}
             <div className="flex justify-between items-center text-sm">

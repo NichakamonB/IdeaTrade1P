@@ -1,3 +1,4 @@
+// src/pages/MemberRegister/MemberRegister.jsx
 import { useState, useEffect } from "react";
 import KbankIcon from "@/assets/icons/Kbank.png";
 import CloseIcon from "@/assets/icons/Close_Circle.png";
