@@ -187,7 +187,7 @@ export default function Welcome() {
           </button>
 
           <button
-            onClick={setMembership}
+            onClick={setFreeAccess}
             className="flex-1 py-5 rounded-xl bg-sky-600 text-white text-xl font-semibold
                        flex items-center justify-center gap-3"
           >
