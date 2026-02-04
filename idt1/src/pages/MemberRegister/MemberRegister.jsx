@@ -107,7 +107,7 @@ const totalPrice = selectedTools.reduce((sum, t) => {
     }
   }, [status, selectedPayment]);
 
-  const handleConfirmPayment = () => {
+const handleConfirmPayment = () => {
     // 1. ดึงข้อมูล User Profile เดิมจาก LocalStorage (ถ้ามี)
     const storedProfile = localStorage.getItem("userProfile");
     let oldUnlockedItems = [];
@@ -123,9 +123,12 @@ const totalPrice = selectedTools.reduce((sum, t) => {
       }
     }
 
+    // 🔥 จุดที่แก้: ดึงเฉพาะ ID ออกมาจากรายการที่เลือกซื้อ (selectedTools)
+    // เพราะ selectedTools เก็บเป็น Object {id, billing} แต่ระบบตรวจสอบต้องการแค่ "ชื่อ ID"
+    const newToolIds = selectedTools.map((t) => t.id);
+
     // 2. รวมรายการเดิม + รายการใหม่ (ใช้ Set เพื่อกำจัดตัวซ้ำ)
-    // เช่น ของเดิมมี [A, B] ของใหม่ซื้อ [B, C] -> ผลลัพธ์จะเป็น [A, B, C]
-    const mergedItems = [...new Set([...oldUnlockedItems, ...selectedTools])];
+    const mergedItems = [...new Set([...oldUnlockedItems, ...newToolIds])];
 
     // 3. บันทึกกลับลงไป
     localStorage.setItem(
@@ -133,7 +136,7 @@ const totalPrice = selectedTools.reduce((sum, t) => {
       JSON.stringify({
         role: "membership",
         billingCycle,
-        unlockedItems: mergedItems, // ใช้รายการที่รวมเสร็จแล้ว
+        unlockedItems: mergedItems, // ตอนนี้เป็นรายการ ID ล้วนๆ แล้ว (เช่น ['gold', 'flow'])
       })
     );
 
