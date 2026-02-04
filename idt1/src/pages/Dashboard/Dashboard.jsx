@@ -31,15 +31,15 @@ function BlurContent({ isLocked, title, children }) {
 
       {isLocked && (
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="bg-slate-900/90 border border-slate-700 p-8 rounded-2xl text-center shadow-2xl backdrop-blur-sm max-w-sm mx-4">
+          <div className="bg-slate-900/90 border border-slate-700 p-8 rounded-2xl text-center shadow-2xl backdrop-blur-sm max-w-lg mx-4">      
             <div className="mb-4 text-4xl">🔒</div>
             <h3 className="text-xl font-bold text-white mb-2">
               {title} (Premium)
             </h3>
             <p className="text-sm text-gray-400 mb-6">
-              เนื้อหานี้สงวนสิทธิ์สำหรับสมาชิก Premium
+              This content is reserved for Premium members only.
               <br />
-              กรุณาอัปเกรดเพื่อเข้าใช้งาน
+              Please upgrade to access it.
             </p>
             <button
               onClick={() =>
@@ -49,7 +49,7 @@ function BlurContent({ isLocked, title, children }) {
               }
               className="px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-black font-bold hover:brightness-110 transition shadow-lg cursor-pointer"
             >
-              อัปเกรดสมาชิก
+              Join Membership
             </button>
           </div>
         </div>
