@@ -62,7 +62,7 @@ const projects = [
   { id: "dr", name: "DR", iconKey: "dr" },
 ];
 
-/* ================= INLINE ICONS FOR MEMBER MENU ================= */
+/* ================= INLINE ICONS ================= */
 const CrownIcon = ({ color }) => (
   <svg viewBox="0 0 24 24" className="w-4 h-4 pointer-events-none" fill={color}>
     <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5M19 19H5V18H19V19Z" />
@@ -90,13 +90,21 @@ const LogoutIconSVG = () => (
   </svg>
 );
 
-/* ================= TOOLTIP COMPONENT ================= */
-const Tooltip = ({ text }) => (
-  <div className="absolute left-[calc(100%+15px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-[#333333] text-white text-[13px] rounded-md border border-white/10 shadow-[0_4px_10px_rgba(0,0,0,0.3)] opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
-    <div className="absolute top-1/2 -left-1.5 -mt-1.5 border-t-[6px] border-b-[6px] border-r-[6px] border-transparent border-r-[#333333]"></div>
-    {text}
-  </div>
-);
+/* ================= 🔥 NEW FLOATING TOOLTIP 🔥 ================= */
+// Tooltip แบบ Fixed Position จะไม่โดน Sidebar บัง หรือตัดขอบ
+const FloatingTooltip = ({ visible, top, text }) => {
+  if (!visible) return null;
+  return (
+    <div
+      style={{ top: top, left: 85 }} // ลอยห่างจากซ้าย 85px (พ้น Sidebar พอดี)
+      className="fixed z-[10000] -translate-y-1/2 px-3 py-1.5 bg-[#333333] text-white text-[13px] rounded-md border border-white/10 shadow-[0_4px_10px_rgba(0,0,0,0.3)] pointer-events-none whitespace-nowrap animate-fade-in"
+    >
+      {/* ลูกศรชี้ซ้าย */}
+      <div className="absolute top-1/2 -left-1.5 -mt-1.5 border-t-[6px] border-b-[6px] border-r-[6px] border-transparent border-r-[#333333]"></div>
+      {text}
+    </div>
+  );
+};
 
 /* ================= SIDEBAR COMPONENT ================= */
 export default function Sidebar({
@@ -107,10 +115,13 @@ export default function Sidebar({
   openProject,
 }) {
   const navigate = useNavigate();
-  const location = useLocation(); // ✅ ประกาศ useLocation
+  const location = useLocation();
   const [isMember, setIsMember] = useState(false);
   const [unlockedList, setUnlockedList] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // ✅ State สำหรับเก็บตำแหน่ง Tooltip
+  const [tooltipState, setTooltipState] = useState({ visible: false, top: 0, text: "" });
 
   useEffect(() => {
     try {
@@ -135,15 +146,27 @@ export default function Sidebar({
     window.location.reload();
   };
 
-  // ✅ ฟังก์ชันช่วยเปลี่ยนหน้า: ถ้าไม่อยู่หน้า Dashboard ให้เด้งกลับไป
   const handleNavigation = (id, projectItem = null) => {
     setActivePage(id);
     if (projectItem && openProject) openProject(projectItem);
-    
-    // ถ้า path ปัจจุบันไม่ใช่ /dashboard ให้สั่งกลับไป dashboard
     if (location.pathname !== "/dashboard") {
         navigate("/dashboard", { state: { goTo: id } });
     }
+  };
+
+  // ✅ ฟังก์ชันคำนวณตำแหน่ง Tooltip เมื่อเมาส์ชี้
+  const handleMouseEnter = (e, text) => {
+    if (!collapsed) return; // ถ้าไม่ได้ย่อ ไม่ต้องโชว์
+    const rect = e.currentTarget.getBoundingClientRect(); // หาตำแหน่งปุ่มบนหน้าจอ
+    setTooltipState({
+      visible: true,
+      top: rect.top + (rect.height / 2), // กึ่งกลางปุ่ม
+      text: text
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipState({ ...tooltipState, visible: false });
   };
 
   const filteredProjects = projects.filter((p) =>
@@ -153,18 +176,22 @@ export default function Sidebar({
   return (
     <>
       <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.1s ease-out; }
       `}</style>
+
+      {/* ✅ แสดง Tooltip ลอยอิสระ (อยู่นอก <aside> ก็ได้ แต่อยู่ในนี้เพื่อให้จัดการง่าย) */}
+      <FloatingTooltip 
+        visible={tooltipState.visible} 
+        top={tooltipState.top} 
+        text={tooltipState.text} 
+      />
 
       <aside
         className={`fixed top-0 left-0 z-[9999] h-screen bg-gradient-to-b from-[#0c0f14] to-[#0a0d11] border-r border-white/10 flex flex-col transition-all duration-300 ${
-          collapsed ? "w-[80px] items-center py-4 overflow-visible" : "w-[280px] overflow-hidden"
+          collapsed ? "w-[80px] items-center py-4" : "w-[280px] overflow-hidden"
         }`}
       >
         {/* ================= HEADER & LOGO ================= */}
@@ -197,9 +224,10 @@ export default function Sidebar({
 
         {/* ================= MENU ITEMS ================= */}
         <nav 
+          // ✅ คืนค่า overflow-y-auto เพื่อให้ Scroll ได้
           className={`flex-1 no-scrollbar w-full ${
             collapsed 
-              ? "px-2 flex flex-col items-center gap-2 overflow-visible" 
+              ? "px-2 flex flex-col items-center gap-2 overflow-y-auto" 
               : "px-3 mt-4 overflow-y-auto"
           }`}
         >
@@ -208,20 +236,16 @@ export default function Sidebar({
           <div className={`transition-all duration-300 mb-2 ${collapsed ? "w-10" : "w-full"}`}>
             <div 
               onClick={() => collapsed && setCollapsed(false)}
+              onMouseEnter={(e) => handleMouseEnter(e, "Search")} // ✅ เพิ่ม Event
+              onMouseLeave={handleMouseLeave}
               className={`relative group flex items-center bg-[#1A1D23] border border-white/5 rounded-lg transition-all 
               ${collapsed ? "w-10 h-10 justify-center cursor-pointer hover:bg-white/10" : "w-full h-10 px-4"}`}
             >
-              <svg 
-                className={`w-4 h-4 text-gray-500 shrink-0 ${!collapsed && "mr-4"}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
+              <svg className={`w-4 h-4 text-gray-500 shrink-0 ${!collapsed && "mr-4"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
 
-              {collapsed && <Tooltip text="Search" />}
-
+              {/* เอา Tooltip เก่าออก เพราะใช้ FloatingTooltip แทนแล้ว */}
               {!collapsed && (
                 <input
                   type="text"
@@ -236,7 +260,9 @@ export default function Sidebar({
 
           {/* Preview Button */}
           <button
-            onClick={() => handleNavigation("preview-projects")} // ✅ เรียกใช้ฟังก์ชันใหม่
+            onClick={() => handleNavigation("preview-projects")} 
+            onMouseEnter={(e) => handleMouseEnter(e, "Preview Projects")} // ✅ เพิ่ม Event
+            onMouseLeave={handleMouseLeave}
             className={`rounded-lg flex items-center shrink-0 transition-all cursor-pointer relative group
             ${activePage === "preview-projects" ? "bg-slate-800 text-white" : "hover:bg-white/5 text-gray-300"}
             ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
@@ -247,9 +273,6 @@ export default function Sidebar({
                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#00ff47] rounded-full border-2 border-[#15181e]"></div>
                 )}
             </div>
-
-            {collapsed && <Tooltip text="Preview Projects" />}
-
             {!collapsed && (
               <>
                 <span className="pointer-events-none">Preview Projects</span>
@@ -263,7 +286,9 @@ export default function Sidebar({
 
           {/* MIT Button */}
           <button
-            onClick={() => handleNavigation("mit")} // ✅ เรียกใช้ฟังก์ชันใหม่
+            onClick={() => handleNavigation("mit")} 
+            onMouseEnter={(e) => handleMouseEnter(e, "MIT")} // ✅ เพิ่ม Event
+            onMouseLeave={handleMouseLeave}
             className={`rounded-lg flex items-center shrink-0 transition-all relative group cursor-pointer
             ${activePage === "mit" ? "bg-slate-800 text-white" : "hover:bg-white/5 text-gray-300"}
             ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 justify-between"}`}
@@ -273,8 +298,6 @@ export default function Sidebar({
                {!collapsed && <span>MIT</span>}
              </div>
              
-             {collapsed && <Tooltip text="MIT" />}
-
              {collapsed ? (
                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 pointer-events-none"></span>
              ) : (
@@ -294,7 +317,9 @@ export default function Sidebar({
               return (
                 <button
                   key={p.id}
-                  onClick={() => handleNavigation(p.id, p)} // ✅ เรียกใช้ฟังก์ชันใหม่
+                  onClick={() => handleNavigation(p.id, p)}
+                  onMouseEnter={(e) => handleMouseEnter(e, p.name)} // ✅ เพิ่ม Event
+                  onMouseLeave={handleMouseLeave}
                   className={`rounded-lg flex items-center shrink-0 transition-all mb-1 cursor-pointer relative group
                   ${active ? "bg-slate-800" : "hover:bg-white/5"}
                   ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 justify-between"}`}
@@ -325,8 +350,6 @@ export default function Sidebar({
                       {!collapsed && <span>{p.name}</span>}
                    </div>
                    
-                   {collapsed && <Tooltip text={p.name} />}
-                   
                    {!collapsed && <CrownIcon color="#facc15" />}
                 </button>
               );
@@ -342,63 +365,64 @@ export default function Sidebar({
             <>
               {/* Profile */}
               <button
-                // 🔴 ใช้ handleNavigation
                 onClick={() => handleNavigation("profile")}
-                // 🔴 เพิ่มเงื่อนไข activePage === 'profile'
+                onMouseEnter={(e) => handleMouseEnter(e, "Profile")} // ✅ เพิ่ม Event
+                onMouseLeave={handleMouseLeave}
                 className={`rounded-lg flex items-center shrink-0 transition-all mb-1 cursor-pointer relative group
                 ${activePage === "profile" ? "bg-slate-800 text-white" : "hover:bg-white/5 text-gray-300"}
                 ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
               >
                  <ProfileIconSVG />
                  {!collapsed && <span className="pointer-events-none">Profile</span>}
-                 {collapsed && <Tooltip text="Profile" />}
               </button>
 
               {/* Manage Subscription */}
               <button
-                // 🔴 ใช้ handleNavigation
                 onClick={() => handleNavigation("subscription")}
-                // 🔴 เพิ่มเงื่อนไข activePage === 'subscription'
+                onMouseEnter={(e) => handleMouseEnter(e, "Manage Subscription")} // ✅ เพิ่ม Event
+                onMouseLeave={handleMouseLeave}
                 className={`rounded-lg flex items-center shrink-0 transition-all mb-1 cursor-pointer relative group
                 ${activePage === "subscription" ? "bg-slate-800 text-white" : "hover:bg-white/5 text-gray-300"}
                 ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
               >
                  <SettingsIconSVG />
                  {!collapsed && <span className="pointer-events-none">Manage Subscription</span>}
-                 {collapsed && <Tooltip text="Manage Subscription" />}
               </button>
 
               {/* Sign Out */}
               <button
                 onClick={handleSignOut}
+                onMouseEnter={(e) => handleMouseEnter(e, "Sign Out")} // ✅ เพิ่ม Event
+                onMouseLeave={handleMouseLeave}
                 className={`rounded-lg flex items-center shrink-0 transition-all mb-1 hover:bg-white/5 text-gray-300 cursor-pointer relative group
                 ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
               >
                  <LogoutIconSVG />
                  {!collapsed && <span className="pointer-events-none">Sign Out</span>}
-                 {collapsed && <Tooltip text="Sign Out" />}
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={handleSignUp}
+                onMouseEnter={(e) => handleMouseEnter(e, "Sign Up")} // ✅ เพิ่ม Event
+                onMouseLeave={handleMouseLeave}
                 className={`rounded-lg flex items-center shrink-0 transition-all mb-1 hover:bg-white/5 text-gray-300 cursor-pointer relative group
                 ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
               >
                  <img src={signupIcon} alt="Sign Up" className="w-5 opacity-80 pointer-events-none" />
                  {!collapsed && <span className="pointer-events-none">Sign Up</span>}
-                 {collapsed && <Tooltip text="Sign Up" />}
               </button>
 
               <button
                 onClick={handleSignIn}
+                onMouseEnter={(e) => handleMouseEnter(e, "Sign In")} // ✅ เพิ่ม Event
+                onMouseLeave={handleMouseLeave}
                 className={`rounded-lg flex items-center shrink-0 transition-all hover:bg-white/5 text-gray-300 cursor-pointer relative group
                 ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 gap-3"}`}
               >
                  <img src={signinIcon} alt="Sign In" className="w-5 opacity-80 pointer-events-none" />
                  {!collapsed && <span className="pointer-events-none">Sign In</span>}
-                 {collapsed && <Tooltip text="Sign In" />}
               </button>
             </>
           )}
@@ -410,6 +434,8 @@ export default function Sidebar({
         <div className={`px-2 pb-2 w-full flex justify-center shrink-0`}>
           <button
             onClick={() => setActivePage("premiumtools")}
+            onMouseEnter={(e) => handleMouseEnter(e, "Join Membership")} // ✅ เพิ่ม Event
+            onMouseLeave={handleMouseLeave}
             className={`flex items-center justify-center transition-all shadow-lg overflow-hidden shrink-0 cursor-pointer relative group
             ${collapsed 
               ? "w-10 h-10 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-400" 
@@ -417,7 +443,6 @@ export default function Sidebar({
           >
             <CrownIcon color="#000" />
             {!collapsed && <span className="whitespace-nowrap pointer-events-none">Join Membership</span>}
-            {collapsed && <Tooltip text="Join Membership" />}
           </button>
         </div>
 
