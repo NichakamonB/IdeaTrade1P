@@ -4,35 +4,52 @@ import './Profile.css';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('Profile');
 
-  // ✅ ฟังก์ชัน: ดึงวันและเวลาปัจจุบัน จัดรูปแบบเป็น "24 January 2026, 11:19"
-  const getCurrentDate = () => {
-    const date = new Date();
-    const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'long' }); // ชื่อเดือนภาษาอังกฤษเต็ม
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0'); // เติมเลข 0 ข้างหน้าถ้ามีหลักเดียว
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    
-    return `${day} ${month} ${year}, ${hours}:${minutes}`;
-  };
-
-  // ข้อมูลจำลอง (Mock Data)
+  // ข้อมูลจำลอง (Mock Data) เริ่มต้นเป็นค่าว่างก่อน
   const [userData, setUserData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    // ✅ แก้ตรงนี้: เรียกใช้ฟังก์ชัน getCurrentDate() เพื่อเอาเวลาปัจจุบัน
-    lastLogin: getCurrentDate(), 
+    lastLogin: '', // รอโหลดจาก LocalStorage
     isVerified: true
   });
 
-  // (Optional) ถ้าอยากให้อัปเดตเวลาทุกครั้งที่เข้ามาหน้านี้ใหม่จริงๆ
+  // ✅ ใช้ useEffect เพื่อจัดการเวลา Login ให้คงที่
   useEffect(() => {
+    // 1. ดึงข้อมูล User Profile จาก LocalStorage
+    const storedProfile = localStorage.getItem("userProfile");
+    let profile = storedProfile ? JSON.parse(storedProfile) : {};
+
+    // 2. เช็คว่ามี "เวลาที่ Login" เก็บไว้หรือยัง?
+    let timestamp = profile.loginTime; 
+
+    if (!timestamp) {
+      // กรณี A: ยังไม่มี (เพิ่งเข้าครั้งแรก) -> สร้างเวลาปัจจุบัน
+      timestamp = new Date();
+      
+      // บันทึกเวลาลงใน profile เพื่อให้ครั้งหน้าใช้เวลาเดิม
+      profile.loginTime = timestamp;
+      localStorage.setItem("userProfile", JSON.stringify(profile));
+    } else {
+      // กรณี B: มีแล้ว (เคย Login มาแล้ว) -> ใช้เวลาเดิม
+      timestamp = new Date(timestamp);
+    }
+
+    // 3. จัดรูปแบบวันที่เพื่อแสดงผล (Format Date)
+    const day = timestamp.getDate();
+    const month = timestamp.toLocaleString('en-US', { month: 'long' });
+    const year = timestamp.getFullYear();
+    const hours = String(timestamp.getHours()).padStart(2, '0');
+    const minutes = String(timestamp.getMinutes()).padStart(2, '0');
+    
+    const formattedDate = `${day} ${month} ${year}, ${hours}:${minutes}`;
+
+    // 4. อัปเดตลง State
     setUserData(prev => ({
         ...prev,
-        lastLogin: getCurrentDate()
+        lastLogin: formattedDate
     }));
+
   }, []);
 
   return (
@@ -66,7 +83,7 @@ const Profile = () => {
             <div className="verified-badge">
               Account Verified <CheckCircleIcon />
             </div>
-            {/* แสดงผลเวลา */}
+            {/* แสดงผลเวลา (จะเป็นเวลาเดิมตลอดจนกว่าจะ Logout หรือ Clear Cache) */}
             <p className="last-login">Last login: {userData.lastLogin}</p>
           </div>
 
