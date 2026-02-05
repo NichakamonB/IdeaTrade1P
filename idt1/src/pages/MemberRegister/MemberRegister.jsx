@@ -195,6 +195,9 @@ export default function MemberRegister() {
 
   const hasMonthly = selectedTools.some(t => t.billing === "monthly");
   const hasYearly = selectedTools.some(t => t.billing === "yearly");
+  // ตัวแปรนับจำนวน
+  const monthlyCount = selectedTools.filter(t => t.billing === "monthly").length;
+  const yearlyCount = selectedTools.filter(t => t.billing === "yearly").length;
 
   /* ================= UI ================= */
   return (
@@ -318,9 +321,14 @@ export default function MemberRegister() {
             {/* MONTHLY */}
             {hasMonthly && (
             <div className="mb-3">
-              <p className="text-sm font-semibold text-[#9FB3C8] mb-2">Monthly</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-[#9FB3C8]">Monthly</p>
+                <p className="text-sm font-semibold text-[#9FB3C8]">
+                  {monthlyCount} Tools
+                </p>
+              </div>
 
-              <div className="max-h-[120px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+              <div className="max-h-[84px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                 {selectedTools
                   .filter(t => t.billing === "monthly")
                   .map((t) => {
@@ -362,9 +370,14 @@ export default function MemberRegister() {
             {/* YEARLY */}
             {hasYearly && (
             <div className="mb-3">
-              <p className="text-sm font-semibold text-[#9FB3C8] mb-2">Yearly</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-[#9FB3C8]">Yearly</p>
+                <p className="text-sm font-semibold text-[#9FB3C8]">
+                  {yearlyCount} Tools
+                </p>
+              </div>
 
-              <div className="max-h-[120px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+              <div className="max-h-[84px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
                 {selectedTools
                   .filter(t => t.billing === "yearly")
                   .map((t) => {
