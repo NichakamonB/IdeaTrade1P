@@ -189,7 +189,7 @@ const handleConfirmPayment = () => {
           {/* Tools */}
           <div className="bg-[#0F1B2D] p-5 rounded-xl">
             <h2 className="text-xl font-semibold mb-4">Select Your Tools</h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               {TOOLS.map((tool) => {
                 const active = selectedTools.some(
                 (t) => t.id === tool.id && t.billing === billingCycle
