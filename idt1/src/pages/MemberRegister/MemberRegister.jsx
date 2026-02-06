@@ -211,10 +211,22 @@ export default function MemberRegister() {
         {/* LEFT */}
         <div className="col-span-7 space-y-6">
           <h1 className="text-4xl font-bold">Subscription & Checkout</h1>
+          <p className="text-sm text-[#9FB3C8]">
+          Charged annually, Cancel anytime
+          </p> 
 
           {/* Billing */}
           <div>
-            <h2 className="text-xl font-semibold mb-2">Billing Cycle</h2>
+            {/* Billing Cycle */}
+            <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-semibold">Billing Cycle</h2>
+              <span
+                className="px-3 py-1 text-xs font-semibold rounded-full
+                          bg-emerald-500/15 text-emerald-400"
+              >
+                Only 2,083฿/m (Billed Yearly)
+              </span>
+          </div>
             <div className="flex bg-[#0F1B2D] rounded-xl p-1 w-[360px]">
               {["monthly", "yearly"].map((t) => (
                 <button
