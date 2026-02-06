@@ -315,15 +315,15 @@ export default function MemberRegister() {
               <h2 className="text-xl font-semibold">Order Summary</h2>
               <button
                 onClick={() => setIsEditSummary(prev => !prev)}
-                className="relative group flex items-center justify-center w-8 h-8
-                          hover:bg-white/10 rounded-full transition"
+                className="group relative flex items-center justify-center w-9 h-9
+                          rounded-full hover:bg-white/10 transition"
               >
                 {/* EDIT */}
                 {!isEditSummary && (
                   <img
                     src={EditIcon}
                     alt="edit"
-                    className="w-5 h-5 opacity-80 group-hover:opacity-100"
+                    className="w-5 h-5 opacity-80 group-hover:opacity-100 transition"
                   />
                 )}
 
@@ -345,6 +345,17 @@ export default function MemberRegister() {
                       />
                   </>
                 )}
+
+                {/* ===== TOOLTIP ===== */}
+                <div
+                  className="absolute -top-10 left-1/2 -translate-x-1/2
+                            whitespace-nowrap px-3 py-1 rounded-md text-xs
+                            bg-[#1F3354] text-white
+                            opacity-0 group-hover:opacity-100
+                            pointer-events-none transition"
+                >
+                  {isEditSummary ? "Confirm Edit" : "Edit"}
+                </div>
               </button>
             </div>
 
