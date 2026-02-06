@@ -16,6 +16,9 @@ import CardGray from "@/assets/icons/blcredit-card.png";
 import CardBlue from "@/assets/icons/bcredit-card.png";
 import QrGray from "@/assets/icons/blqr.png";
 import QrBlue from "@/assets/icons/bqr.png";
+import EditIcon from "@/assets/icons/edit.svg";
+import ConfirmIcon from "@/assets/icons/confirm.svg";
+import BlConfirm from "@/assets/icons/blconfirm.png";
 
 // รายละเอียดเครื่องมือและราคา
 const TOOLS = [
@@ -312,9 +315,36 @@ export default function MemberRegister() {
               <h2 className="text-xl font-semibold">Order Summary</h2>
               <button
                 onClick={() => setIsEditSummary(prev => !prev)}
-                className="text-[#9FB3C8] hover:text-white transition"
+                className="relative group flex items-center justify-center w-8 h-8
+                          hover:bg-white/10 rounded-full transition"
               >
-                {isEditSummary ? "Done" : "Edit"}
+                {/* EDIT */}
+                {!isEditSummary && (
+                  <img
+                    src={EditIcon}
+                    alt="edit"
+                    className="w-5 h-5 opacity-80 group-hover:opacity-100"
+                  />
+                )}
+
+                {/* CONFIRM ICON */}
+                {isEditSummary && (
+                  <>
+                  {/* default confirm */}
+                    <img
+                      src={ConfirmIcon}
+                      alt="confirm"
+                      className="w-5 h-5 opacity-100 group-hover:opacity-0 transition"
+                    />
+
+                    {/* hover → blconfirm */}
+                      <img
+                        src={BlConfirm}
+                        alt="confirm hover"
+                        className="absolute w-5 h-5 opacity-0 group-hover:opacity-100 transition"
+                      />
+                  </>
+                )}
               </button>
             </div>
 
