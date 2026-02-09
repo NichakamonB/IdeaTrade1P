@@ -101,7 +101,7 @@ const ManageSubscription = () => {
                 <div className="status-indicator active">
                   <CheckCircleIcon />
                   <div>
-                    <span className="status-text">Active</span>
+                    <span className="status-text">Active </span>
                     <span className="status-date">{item.statusDetail}</span>
                   </div>
                 </div>
