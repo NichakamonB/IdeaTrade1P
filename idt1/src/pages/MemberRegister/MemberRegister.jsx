@@ -365,7 +365,7 @@ export default function MemberRegister() {
                             opacity-0 group-hover:opacity-100
                             pointer-events-none transition"
                 >
-                  {isEditSummary ? "Confirm Edit" : "Edit"}
+                  {isEditSummary ? "Cancel Edit" : "Edit"}
                 </div>
               </button>
             </div>
