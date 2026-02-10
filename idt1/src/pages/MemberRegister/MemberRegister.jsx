@@ -200,6 +200,8 @@ export default function MemberRegister() {
   // ตัวแปรนับจำนวน
   const monthlyCount = selectedTools.filter(t => t.billing === "monthly").length;
   const yearlyCount = selectedTools.filter(t => t.billing === "yearly").length;
+  // true = เลือกแค่อย่างใดอย่างหนึ่ง
+  const isSingleBilling = hasMonthly ^ hasYearly; 
 
   /* ================= UI ================= */
   return (
@@ -380,7 +382,12 @@ export default function MemberRegister() {
                 </p>
               </div>
 
-              <div className="max-h-[60px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+              <div
+                className={`
+                  overflow-y-auto pr-2 space-y-2 custom-scrollbar
+                  ${isSingleBilling ? "max-h-[150px]" : "max-h-[60px]"}
+                `}
+              >
                 {selectedTools
                   .filter(t => t.billing === "monthly")
                   .map((t) => {
@@ -429,7 +436,12 @@ export default function MemberRegister() {
                 </p>
               </div>
 
-              <div className="max-h-[60px] overflow-y-auto pr-2 space-y-2 custom-scrollbar">
+              <div
+                className={`
+                  overflow-y-auto pr-2 space-y-2 custom-scrollbar
+                  ${isSingleBilling ? "max-h-[150px]" : "max-h-[60px]"}
+                `}
+              >
                 {selectedTools
                   .filter(t => t.billing === "yearly")
                   .map((t) => {
