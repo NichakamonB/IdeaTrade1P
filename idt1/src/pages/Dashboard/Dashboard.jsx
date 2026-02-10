@@ -9,8 +9,10 @@ import Sidebar from "@/layouts/Sidebar.jsx";
 
 // ✅ Import หน้า Profile และ Subscription
 import Profile from "@/pages/Profile/Profile.jsx";
-// ตรวจสอบ Path นี้ให้ตรงกับไฟล์จริงของคุณนะครับ (บางทีอาจอยู่ที่ pages/Subscription/ManageSubscription)
-import ManageSubscription from "@/pages/Profile/Subscriptions"; 
+import ManageSubscription from "@/pages/Profile/Subscriptions";
+
+// ✅ 1. Import หน้าหมอดูหุ้น (Stock Fortune Teller)
+import StockFortuneTeller from "@/pages/Tools/StockFortuneTeller";
 
 // URL รูปกราฟหน้า MIT
 const CHART_IMAGE_URL =
@@ -66,16 +68,14 @@ function BlurContent({ isLocked, title, children }) {
 /* ======================
    Dashboard Page (Main)
 ====================== */
-export default function Dashboard({ initialPage }) { // ✅ รับ prop initialPage
+export default function Dashboard({ initialPage }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [collapsed, setCollapsed] = useState(false);
-  // ✅ ใช้ initialPage เป็นค่าเริ่มต้น (ถ้ามี)
   const [activePage, setActivePage] = useState(initialPage || "preview-projects");
   const [unlockedItems, setUnlockedItems] = useState([]);
 
-  // ✅ รับค่า goTo จาก navigate (Join Membership) หรือ URL
   useEffect(() => {
     if (location.state?.goTo) {
       setActivePage(location.state.goTo);
@@ -91,6 +91,13 @@ export default function Dashboard({ initialPage }) { // ✅ รับ prop initi
       console.error(e);
     }
   }, []);
+
+  // Update activePage เมื่อ initialPage เปลี่ยน (เช่น กดจาก Sidebar แล้ว URL เปลี่ยน)
+  useEffect(() => {
+    if (initialPage) {
+      setActivePage(initialPage);
+    }
+  }, [initialPage]);
 
   const PREMIUM_PROJECTS = {
     fortune: { title: "หมอดูหุ้น", desc: "วิเคราะห์แนวโน้มหุ้นด้วย AI" },
@@ -118,30 +125,28 @@ export default function Dashboard({ initialPage }) { // ✅ รับ prop initi
             setActivePage(page);
           }
         }}
-        // เพิ่มบรรทัดนี้เพื่อให้ Sidebar สั่งเปลี่ยนหน้าได้จริง (ตามโค้ด Sidebar ก่อนหน้า)
         openProject={(p) => setActivePage(p.id)}
       />
 
       {/* Main Content */}
       <main
-        // 🔴 จุดที่แก้ไข: ปรับ Margin ให้ตรงกับขนาด Sidebar (80px ตอนย่อ, 280px ตอนขยาย)
         className={`flex-1 transition-all duration-300 overflow-y-auto ${
           collapsed ? "ml-[80px]" : "ml-[280px]"
         }`}
       >
-        {/* ✅ ปรับ Container: ถ้าเป็นหน้า Profile/Sub ให้เอา Padding ออก (p-0) เพื่อให้เต็มจอ */}
-        <div className={["profile", "subscription"].includes(activePage) ? "p-0" : "p-8 pb-20"}>
+        {/* ✅ 2. เพิ่ม "stock-fortune" ในเงื่อนไข p-0 เพื่อให้แสดงผลเต็มจอ */}
+        <div className={["profile", "subscription", "stock-fortune"].includes(activePage) ? "p-0" : "p-8 pb-20"}>
           
           {/* <Navbar activePage={activePage} setActivePage={setActivePage} /> */}
 
-          {/* ✅ 1. ส่วนแสดงผล Profile */}
+          {/* ส่วนแสดงผล Profile */}
           {activePage === "profile" && (
-             <div className="min-h-screen bg-[#0f172a] text-white"> {/* ใส่ BG สีเข้มรองไว้ */}
+             <div className="min-h-screen bg-[#0f172a] text-white">
                 <Profile />
              </div>
           )}
 
-          {/* ✅ 2. ส่วนแสดงผล Manage Subscription */}
+          {/* ส่วนแสดงผล Manage Subscription */}
           {activePage === "subscription" && (
              <ManageSubscription />
           )}
@@ -152,6 +157,11 @@ export default function Dashboard({ initialPage }) { // ✅ รับ prop initi
 
           {/* ===== Premium Tools ===== */}
           {activePage === "premiumtools" && <PremiumTools />}
+
+          {/* ✅ 3. ส่วนแสดงผล Stock Fortune Teller (หมอดูหุ้น) */}
+          {activePage === "stock-fortune" && (
+             <StockFortuneTeller />
+          )}
 
           {/* ===== MIT ===== */}
           {activePage === "mit" && (
