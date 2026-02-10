@@ -74,8 +74,7 @@ const StockFortuneTeller = () => {
                   เช่น src="/assets/stock-dashboard-real.png"
                */}
               <img 
-                src="https://placehold.co/1200x675/0f172a/1e293b?text=Stock+Fortune+Dashboard" 
-                alt="Stock Fortune Teller Dashboard" 
+                src="\src\assets\images\StockFortune.png" 
                 className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-[1.01] transition duration-500 ease-out" 
               />
             </div>
