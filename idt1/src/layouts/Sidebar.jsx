@@ -140,12 +140,10 @@ export default function Sidebar({
   const handleSignUp = () => navigate("/register");
   const handleSignIn = () => navigate("/welcome");
   
-  // 🟢 แก้ไข: เปลี่ยนจาก Logout ทันที เป็นแค่เปิด Modal
   const handleSignOutClick = () => {
     setShowLogoutModal(true);
   };
 
-  // 🟢 ฟังก์ชันใหม่: Logout จริงๆ เมื่อกดปุ่มแดงใน Modal
   const confirmSignOut = () => {
     localStorage.removeItem("userProfile");
     setIsMember(false);
@@ -154,10 +152,30 @@ export default function Sidebar({
     window.location.reload();
   };
 
+  // ✅ แก้ไข Logic การนำทาง
   const handleNavigation = (id, projectItem = null) => {
+    
+    // --- 1. เงื่อนไขพิเศษสำหรับ "หมอดูหุ้น" (fortune) ---
+    if (id === "fortune") {
+        const isUnlocked = unlockedList.includes("fortune");
+        
+        // ถ้า "ยังไม่ปลดล็อก" (Free) -> ไปหน้า Preview แทน Popup
+        if (!isUnlocked) {
+            setActivePage("stock-fortune"); // ตั้ง Active ให้เป็นหน้า Preview
+            navigate("/stock-fortune");     // เปลี่ยน URL
+            return; // จบการทำงาน (ไม่ไปทำ Logic ปกติด้านล่าง)
+        }
+        
+        // ถ้า "ปลดล็อกแล้ว" (Member) -> จะหลุดลงไปทำงาน Logic ปกติ (เปิด Tool)
+    }
+
+    // --- 2. Logic ปกติสำหรับหน้าอื่นๆ ---
     setActivePage(id);
     if (projectItem && openProject) openProject(projectItem);
-    if (location.pathname !== "/dashboard") {
+    
+    // ถ้ายังไม่ได้อยู่ที่ Dashboard ให้ Nav ไป
+    // (เพิ่มเช็คว่าถ้าอยู่ที่ /stock-fortune ก็ต้อง Nav กลับมา Dashboard ถ้ากดเมนูอื่น)
+    if (location.pathname !== "/dashboard" && location.pathname !== "/mit" && location.pathname !== "/stock-fortune") {
         navigate("/dashboard", { state: { goTo: id } });
     }
   };
@@ -324,16 +342,16 @@ export default function Sidebar({
             ${activePage === "mit" ? "bg-slate-800 text-white" : "hover:bg-white/5 text-gray-300"}
             ${collapsed ? "w-10 h-10 justify-center" : "w-full h-11 px-4 justify-between"}`}
           >
-             <div className={`flex items-center gap-3 pointer-events-none ${collapsed ? "justify-center w-full" : ""}`}>
-               <img src={getIcon("mit", activePage === "mit")} className="w-5" alt="mit" />
-               {!collapsed && <span>MIT</span>}
-             </div>
-             
-             {collapsed ? (
-               <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 pointer-events-none"></span>
-             ) : (
-               <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-400 text-black pointer-events-none">FREE</span>
-             )}
+              <div className={`flex items-center gap-3 pointer-events-none ${collapsed ? "justify-center w-full" : ""}`}>
+                <img src={getIcon("mit", activePage === "mit")} className="w-5" alt="mit" />
+                {!collapsed && <span>MIT</span>}
+              </div>
+              
+              {collapsed ? (
+                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-emerald-400 pointer-events-none"></span>
+              ) : (
+                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-400 text-black pointer-events-none">FREE</span>
+              )}
           </button>
 
           {/* Member Label */}
@@ -342,7 +360,8 @@ export default function Sidebar({
           {/* Project List */}
           {filteredProjects.length > 0 ? (
             filteredProjects.map((p) => {
-              const active = activePage === p.id;
+              // ✅ ปรับ Highlight: ถ้า activePage คือ stock-fortune ให้ปุ่ม fortune ขึ้น active
+              const active = activePage === p.id || (p.id === "fortune" && activePage === "stock-fortune");
               const unlocked = unlockedList.includes(p.id);
 
               return (
@@ -369,13 +388,13 @@ export default function Sidebar({
                         style={
                           active 
                             ? (unlocked 
-                                ? { filter: "brightness(0) saturate(100%) invert(87%) sepia(26%) saturate(6838%) hue-rotate(359deg) brightness(101%) contrast(103%)" }
-                                : { filter: "brightness(0) invert(1)" } 
-                              )
+                              ? { filter: "brightness(0) saturate(100%) invert(87%) sepia(26%) saturate(6838%) hue-rotate(359deg) brightness(101%) contrast(103%)" }
+                              : { filter: "brightness(0) invert(1)" } 
+                            )
                             : (unlocked 
-                                ? { filter: "brightness(0) saturate(100%) invert(43%) sepia(70%) saturate(2264%) hue-rotate(24deg) brightness(92%) contrast(101%)" } 
-                                : {} 
-                              )
+                              ? { filter: "brightness(0) saturate(100%) invert(43%) sepia(70%) saturate(2264%) hue-rotate(24deg) brightness(92%) contrast(101%)" } 
+                              : {} 
+                            )
                         }
                       />
                       {!collapsed && <span>{p.name}</span>}
