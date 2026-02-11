@@ -25,10 +25,9 @@ const PREMIUM_PROJECTS = {
   dr: { title: "DR", desc: "Depositary Receipt" },
 };
 
-// ✅ แก้ไข: เอา "stock-fortune" ออกจาก List นี้
-// เพื่อให้หน้าหมอดูหุ้นเว้นระยะ Sidebar และจัดกึ่งกลางสวยงามเหมือนหน้า MIT
-const FULL_WIDTH_PAGES = ["profile", "subscription"];
-const FULL_WIDTH_PATHS = ["/profile", "/subscription"];
+// คงไว้เป็นค่าว่างถูกต้องแล้วครับ (เพื่อไม่ให้ Sidebar ทับ)
+const FULL_WIDTH_PAGES = []; 
+const FULL_WIDTH_PATHS = [];
 
 /* ================= SUB-COMPONENT: BLUR CONTENT ================= */
 function BlurContent({ isLocked, title, children }) {
@@ -72,19 +71,17 @@ export default function Dashboard({ initialPage }) {
   const [unlockedItems, setUnlockedItems] = useState([]);
 
   /* --- Effects --- */
-  // Sync activePage with URL or Navigation State
   useEffect(() => {
     if (location.state?.goTo) {
       setActivePage(location.state.goTo);
     } else {
       const path = location.pathname;
       if (path === "/stock-fortune") setActivePage("stock-fortune");
-      else if (path === "/profile") setActivePage("profile");
-      else if (path === "/subscription") setActivePage("subscription");
+      else if (path.includes("/profile")) setActivePage("profile");
+      else if (path.includes("/subscription")) setActivePage("subscription");
     }
   }, [location.state, location.pathname]);
 
-  // Load User Permissions
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("userProfile") || "{}");
@@ -94,7 +91,6 @@ export default function Dashboard({ initialPage }) {
     }
   }, []);
 
-  // Sync with prop change
   useEffect(() => {
     if (initialPage) setActivePage(initialPage);
   }, [initialPage]);
@@ -102,6 +98,11 @@ export default function Dashboard({ initialPage }) {
   /* --- Helpers --- */
   const isFullWidthPage = () => {
     return FULL_WIDTH_PAGES.includes(activePage) || FULL_WIDTH_PATHS.includes(location.pathname);
+  };
+
+  // Helper เพื่อเช็คว่าเป็นหน้า Profile หรือ Subscription หรือไม่ (จะได้ลบ Padding ออก)
+  const isProfileOrSub = () => {
+    return activePage === "profile" || activePage === "subscription" || location.pathname.includes("/profile");
   };
 
   /* --- Render --- */
@@ -128,7 +129,8 @@ export default function Dashboard({ initialPage }) {
             : (collapsed ? "ml-[80px]" : "ml-[280px]")
         }`}
       >
-        <div className={isFullWidthPage() ? "p-0" : "p-8 pb-20"}>
+        {/* ✅ แก้ไขจุดที่ 1: ถ้าเป็นหน้า Profile ให้ใช้ p-0 (ไม่มีขอบ) ถ้าหน้าอื่นใช้ p-8 ตามเดิม */}
+        <div className={isFullWidthPage() || isProfileOrSub() ? "p-0" : "p-8 pb-20"}>
           
           {/* <Navbar activePage={activePage} setActivePage={setActivePage} /> */}
 
@@ -136,27 +138,32 @@ export default function Dashboard({ initialPage }) {
 
           {/* Profile */}
           {(activePage === "profile" || location.pathname === "/profile") && (
-             <div className="min-h-screen bg-[#0f172a] text-white"><Profile /></div>
+             // ✅ แก้ไขจุดที่ 2: ใส่พื้นหลังและ Padding ตรงนี้แทน เพื่อให้พื้นหลังเต็มจอ
+             <div className="w-full min-h-full bg-[#0f172a] p-8"> 
+                <Profile />
+             </div>
           )}
 
           {/* Subscription */}
           {(activePage === "subscription" || location.pathname === "/subscription") && (
-             <ManageSubscription />
+             // ทำเหมือนกันกับ Subscription
+             <div className="w-full min-h-full bg-[#0f172a] p-8">
+                <ManageSubscription />
+             </div>
           )}
 
           {/* Dashboard Projects */}
           {(activePage === "preview-projects" || activePage === "whatsnew") && <PreviewProjects />}
           {activePage === "premiumtools" && <PremiumTools />}
 
-          {/* Stock Fortune Teller (แสดงผลแบบปกติ เว้น Sidebar) */}
+          {/* Stock Fortune Teller */}
           {(activePage === "stock-fortune" || location.pathname === "/stock-fortune") && (
              <StockFortuneTeller />
           )}
 
           {/* MIT Page */}
           {activePage === "mit" && (
-            <div className="relative w-full max-w-5xl mx-auto text-center py-10 animate-fade-in">
-              {/* MIT Content */}
+            <div className="relative w-full max-w-5xl mx-auto text-center py-4 animate-fade-in">
               <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
               <div className="relative z-10">
                 <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight whitespace-nowrap">
@@ -165,7 +172,6 @@ export default function Dashboard({ initialPage }) {
                 <p className="text-gray-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto tracking-tight whitespace-nowrap">
                   Multi-agent AI system that debates, validates risk, and delivers objective trading insights.
                 </p>
-                {/* MIT Chart Preview */}
                 <div className="relative group mx-auto max-w-4xl mb-12">
                   <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
                   <div className="relative bg-slate-900 border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
