@@ -14,6 +14,7 @@ import StockFortuneTeller from "@/pages/Tools/StockFortuneTeller";
 const CHART_IMAGE_URL = "https://images.unsplash.com/photo-1611974765270-ca1258634369?q=80&w=1964&auto=format&fit=crop";
 
 const PREMIUM_PROJECTS = {
+  // ✅ ต้องใส่ 'fortune' ไว้ตรงนี้ เพื่อให้ Sidebar มีเมนูขึ้น
   fortune: { title: "หมอดูหุ้น", desc: "วิเคราะห์แนวโน้มหุ้นด้วย AI" },
   petroleum: { title: "Petroleum", desc: "ข้อมูลตลาดน้ำมันโลก" },
   rubber: { title: "Rubber Thai", desc: "อุตสาหกรรมยางพาราไทย" },
@@ -25,9 +26,11 @@ const PREMIUM_PROJECTS = {
   dr: { title: "DR", desc: "Depositary Receipt" },
 };
 
-// คงไว้เป็นค่าว่างถูกต้องแล้วครับ (เพื่อไม่ให้ Sidebar ทับ)
 const FULL_WIDTH_PAGES = []; 
 const FULL_WIDTH_PATHS = [];
+
+// ✅ เพิ่ม 'fortune' และ 'stock-fortune' เข้าไปในรายการหน้าเต็มจอ
+const NO_PADDING_PAGES = ["profile", "subscription", "stock-fortune", "fortune"]; 
 
 /* ================= SUB-COMPONENT: BLUR CONTENT ================= */
 function BlurContent({ isLocked, title, children }) {
@@ -76,7 +79,8 @@ export default function Dashboard({ initialPage }) {
       setActivePage(location.state.goTo);
     } else {
       const path = location.pathname;
-      if (path === "/stock-fortune") setActivePage("stock-fortune");
+      // ✅ ดักจับ path ได้ทั้ง 2 แบบ
+      if (path === "/stock-fortune" || path === "/fortune") setActivePage("fortune");
       else if (path.includes("/profile")) setActivePage("profile");
       else if (path.includes("/subscription")) setActivePage("subscription");
     }
@@ -100,9 +104,13 @@ export default function Dashboard({ initialPage }) {
     return FULL_WIDTH_PAGES.includes(activePage) || FULL_WIDTH_PATHS.includes(location.pathname);
   };
 
-  // Helper เพื่อเช็คว่าเป็นหน้า Profile หรือ Subscription หรือไม่ (จะได้ลบ Padding ออก)
-  const isProfileOrSub = () => {
-    return activePage === "profile" || activePage === "subscription" || location.pathname.includes("/profile");
+  const isNoPaddingPage = () => {
+    return (
+        NO_PADDING_PAGES.includes(activePage) || 
+        location.pathname.includes("/profile") ||
+        activePage === "stock-fortune" || // เผื่อกรณี URL
+        activePage === "fortune"          // เผื่อกรณีคลิกจาก Sidebar
+    );
   };
 
   /* --- Render --- */
@@ -118,7 +126,7 @@ export default function Dashboard({ initialPage }) {
           if (page === "home") setActivePage("preview-projects");
           else setActivePage(page);
         }}
-        openProject={(p) => setActivePage(p.id)}
+        openProject={(p) => setActivePage(p.id)} // ตรงนี้แหละครับที่มันส่ง 'fortune' มา
       />
 
       {/* Main Content Area */}
@@ -129,39 +137,26 @@ export default function Dashboard({ initialPage }) {
             : (collapsed ? "ml-[80px]" : "ml-[280px]")
         }`}
       >
-        {/* ✅ แก้ไขจุดที่ 1: ถ้าเป็นหน้า Profile ให้ใช้ p-0 (ไม่มีขอบ) ถ้าหน้าอื่นใช้ p-8 ตามเดิม */}
-        <div className={isFullWidthPage() || isProfileOrSub() ? "p-0" : "p-8 pb-20"}>
+        <div className={isFullWidthPage() || isNoPaddingPage() ? "p-0" : "p-8 pb-20"}>
           
-          {/* <Navbar activePage={activePage} setActivePage={setActivePage} /> */}
-
-          {/* --- Page Routing Logic --- */}
-
-          {/* Profile */}
+          {/* Profile & Subscriptions */}
           {(activePage === "profile" || location.pathname === "/profile") && (
-             // ✅ แก้ไขจุดที่ 2: ใส่พื้นหลังและ Padding ตรงนี้แทน เพื่อให้พื้นหลังเต็มจอ
-             <div className="w-full min-h-full bg-[#0f172a] p-8"> 
-                <Profile />
-             </div>
+             <div className="w-full min-h-full bg-[#0f172a] p-8"> <Profile /> </div>
           )}
-
-          {/* Subscription */}
           {(activePage === "subscription" || location.pathname === "/subscription") && (
-             // ทำเหมือนกันกับ Subscription
-             <div className="w-full min-h-full bg-[#0f172a] p-8">
-                <ManageSubscription />
-             </div>
+             <div className="w-full min-h-full bg-[#0f172a] p-8"> <ManageSubscription /> </div>
           )}
 
-          {/* Dashboard Projects */}
+          {/* Dashboard Home */}
           {(activePage === "preview-projects" || activePage === "whatsnew") && <PreviewProjects />}
           {activePage === "premiumtools" && <PremiumTools />}
 
-          {/* Stock Fortune Teller */}
-          {(activePage === "stock-fortune" || location.pathname === "/stock-fortune") && (
+          {/* ✅ 1. เช็คตรงนี้ก่อน! ถ้า activePage เป็น 'fortune' ให้โชว์ StockFortuneTeller ทันที */}
+          {(activePage === "stock-fortune" || activePage === "fortune" || location.pathname === "/stock-fortune") && (
              <StockFortuneTeller />
           )}
 
-          {/* MIT Page */}
+          {/* MIT Page (✅ กู้คืนเนื้อหากลับมาแล้วครับ) */}
           {activePage === "mit" && (
             <div className="relative w-full max-w-5xl mx-auto text-center py-4 animate-fade-in">
               <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
@@ -192,11 +187,15 @@ export default function Dashboard({ initialPage }) {
             </div>
           )}
 
-          {/* Other Premium Projects (Locked) */}
+          {/* ✅ 2. Loop นี้เอาไว้โชว์หน้า Lock ของ Tools อื่นๆ */}
           {Object.keys(PREMIUM_PROJECTS).map((key) => {
+            // ถ้าไม่ใช่หน้าที่เลือก ให้ข้าม
             if (activePage !== key) return null;
-            const isUnlocked = unlockedItems.includes(key);
+            
+            // 🚨 สำคัญมาก: ถ้าเป็น 'fortune' ให้ข้าม Loop นี้ไปเลย (เพราะเราโชว์ component จริงไปแล้วข้างบน)
+            if (key === 'fortune') return null; 
 
+            const isUnlocked = unlockedItems.includes(key);
             return (
               <BlurContent key={key} isLocked={!isUnlocked} title={PREMIUM_PROJECTS[key].title}>
                 <div className="bg-slate-800/50 border border-slate-700 p-8 rounded-xl min-h-[400px]">

@@ -1,8 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const StockFortuneTeller = () => {
   const navigate = useNavigate();
+  const [isMember, setIsMember] = useState(false);
+
+  // --- Logic เช็คสถานะ Member ---
+  useEffect(() => {
+    try {
+      const userProfile = localStorage.getItem("userProfile");
+      if (userProfile) {
+        const user = JSON.parse(userProfile);
+        // เช็คว่ามีสิทธิ์ 'fortune' หรือไม่ (ถ้ามีถือว่าเป็น Member)
+        if (user.unlockedItems && user.unlockedItems.includes('fortune')) {
+          setIsMember(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking member status:", error);
+    }
+  }, []);
 
   // ข้อมูลฟีเจอร์ต่างๆ
   const features = [
@@ -33,12 +50,12 @@ const StockFortuneTeller = () => {
   ];
 
   return (
-    <div className="relative w-full min-h-screen text-white overflow-hidden animate-fade-in">
+    <div className="relative w-full min-h-screen text-white overflow-hidden animate-fade-in pb-20">
       
       {/* Background Ambience */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-4 flex flex-col items-center">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 flex flex-col items-center">
         
         {/* --- Header Section --- */}
         <div className="text-center mb-10">
@@ -53,43 +70,41 @@ const StockFortuneTeller = () => {
         </div>
 
         {/* --- Main Dashboard Image (Mac Window Style) --- */}
-        <div className="relative group w-full max-w-5xl mb-20">
-          {/* Neon Glow Behind */}
+        <div className="relative group w-full max-w-5xl mb-16">
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-700"></div>
           
           <div className="relative bg-[#0B1221] border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
-            {/* Window Controls */}
             <div className="bg-[#0f172a] px-4 py-3 flex items-center justify-between border-b border-slate-700/50">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
               </div>
-              <div className="w-10"></div> {/* Spacer for balance */}
             </div>
             
-            {/* Image Placeholder */}
-            <div className="aspect-[16/9] w-full bg-[#0B1221] relative overflow-hidden">
-               {/* TODO: เปลี่ยน src ด้านล่างนี้เป็นรูปจริงของคุณ 
-                  เช่น src="/assets/stock-dashboard-real.png"
-               */}
+            <div className="aspect-[16/9] w-full bg-[#0B1221] relative overflow-hidden group">
               <img 
-                src="\src\assets\images\StockFortune.png" 
+                src="/src/assets/images/StockFortune.png" 
                 className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-[1.01] transition duration-500 ease-out" 
+                alt="Dashboard Preview"
               />
             </div>
           </div>
         </div>
 
-        {/* --- Features Section --- */}
-        <div className="w-full max-w-5xl">
+        {/* --- Features Section (GRID Layout - ไม่เลื่อน) --- */}
+        <div className="w-full max-w-5xl mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
             6 Main Features
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+          {/* ✅ กลับมาใช้ Grid แบบเดิม */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((item, index) => (
-              <div key={index} className="group bg-[#0f172a]/60 border border-slate-700/50 p-6 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
+              <div 
+                key={index} 
+                className="group bg-[#0f172a]/60 border border-slate-700/50 p-6 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300"
+              >
                 <h3 className="text-xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors">
                   {item.title}
                 </h3>
@@ -101,18 +116,42 @@ const StockFortuneTeller = () => {
           </div>
         </div>
 
-        {/* --- CTA Button --- */}
-        <div className="text-center">
-          <button 
-            // ✅ แก้ไข Path ให้ตรงกับ AppRoutes ("/member-register")
-            onClick={() => navigate("/member-register")} 
-            className="group relative inline-flex items-center justify-center px-8 py-3 font-semibold text-white transition-all duration-200 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full hover:from-cyan-400 hover:to-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] cursor-pointer"
-          >
-            <span className="mr-2">Upgrade Subscription</span>
-            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </button>
+        {/* --- CTA Buttons (Conditional Logic) --- */}
+        <div className="text-center w-full max-w-md mx-auto mt-4">
+          
+          {isMember ? (
+            /* ================= CASE 1: เป็น Member แล้ว ================= */
+            <button 
+              onClick={() => navigate("/member-register")} 
+              className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
+            >
+              <span className="mr-2">Upgrade Subscription</span>
+              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+
+          ) : (
+            /* ================= CASE 2: ยังไม่เป็น Member (Free) ================= */
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+              {/* ปุ่ม Sign In */}
+              <button 
+                onClick={() => navigate("/login")} 
+                className="w-full md:w-auto px-8 py-3 rounded-full bg-slate-800 text-white font-semibold border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300"
+              >
+                Sign In
+              </button>
+
+              {/* ปุ่ม Join Membership */}
+              <button 
+                onClick={() => navigate("/member-register")} 
+                className="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
+              >
+                Join Membership
+              </button>
+            </div>
+          )}
+
         </div>
 
       </div>
