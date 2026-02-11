@@ -9,6 +9,7 @@ import PremiumTools from "@/pages/Dashboard/PremiumTools.jsx";
 import Profile from "@/pages/Profile/Profile.jsx";
 import ManageSubscription from "@/pages/Profile/Subscriptions";
 import StockFortuneTeller from "@/pages/Tools/StockFortuneTeller";
+import PetroleumPreview from "@/pages/Tools/PetroleumInsights";
 
 /* ================= CONSTANTS ================= */
 const CHART_IMAGE_URL = "https://images.unsplash.com/photo-1611974765270-ca1258634369?q=80&w=1964&auto=format&fit=crop";
@@ -154,6 +155,10 @@ export default function Dashboard({ initialPage }) {
           {/* ✅ 1. เช็คตรงนี้ก่อน! ถ้า activePage เป็น 'fortune' ให้โชว์ StockFortuneTeller ทันที */}
           {(activePage === "stock-fortune" || activePage === "fortune" || location.pathname === "/stock-fortune") && (
              <StockFortuneTeller />
+          )}
+          {/* ถ้า activePage เป็น 'petroleum' ให้โชว์ PetroleumPreview ทันที */}
+          {(activePage === "petroleum-preview" || activePage === "petroleum-preview" || location.pathname === "/petroleum-preview") && (
+             <PetroleumPreview />
           )}
 
           {/* MIT Page (✅ กู้คืนเนื้อหากลับมาแล้วครับ) */}
