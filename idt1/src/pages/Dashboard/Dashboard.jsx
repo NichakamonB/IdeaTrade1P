@@ -12,6 +12,11 @@ import StockFortuneTeller from "@/pages/Tools/StockFortuneTeller";
 import PetroleumPreview from "@/pages/Tools/PetroleumInsights";
 import RubberThai from "@/pages/Tools/RubberThai";
 import FlowIntraday from "@/pages/Tools/FlowIntraday";
+import S50 from "@/pages/Tools/S50";
+// import Gold from "@/pages/Tools/Gold";
+// import BidAsk from "@/pages/Tools/BidAsk";
+// import TickMatch from "@/pages/Tools/TickMatch";
+// import DRInsight from "@/pages/Tools/DRInsight";
 
 /* ================= CONSTANTS ================= */
 const CHART_IMAGE_URL = "https://images.unsplash.com/photo-1611974765270-ca1258634369?q=80&w=1964&auto=format&fit=crop";
@@ -162,13 +167,33 @@ export default function Dashboard({ initialPage }) {
           {(activePage === "petroleum-preview" || activePage === "petroleum-preview" || location.pathname === "/petroleum-preview") && (
              <PetroleumPreview />
           )}
-          {/* ถ้า activePage เป็น 'rubber' ให้โชว์ PetroleumPreview ทันที */}
+          {/* ถ้า activePage เป็น 'rubber' ให้โชว์ RubberThai ทันที */}
           {(activePage === "RubberThai " || activePage === "RubberThai" || location.pathname === "/RubberThai") && (
              <RubberThai />
           )}
-          {/* ถ้า activePage เป็น 'flow' ให้โชว์ PetroleumPreview ทันที */}
+          {/* ถ้า activePage เป็น 'flow' ให้โชว์ FlowIntraday ทันที */}
           {(activePage === "FlowIntraday " || activePage === "FlowIntraday" || location.pathname === "/FlowIntraday") && (
              <FlowIntraday />
+          )}
+          {/* ถ้า activePage เป็น 'S50' ให้โชว์ S50 ทันที */}
+          {(activePage === "S50 " || activePage === "S50" || location.pathname === "/S50") && (
+             <S50 />
+          )}
+          {/* ถ้า activePage เป็น 'Gold' ให้โชว์ Gold ทันที */}
+          {(activePage === "Gold " || activePage === "Gold" || location.pathname === "/Gold") && (
+             <Gold />
+          )}
+          {/* ถ้า activePage เป็น 'BidAsk' ให้โชว์ BidAsk ทันที */}
+          {(activePage === "BidAsk " || activePage === "BidAsk" || location.pathname === "/BidAsk") && (
+             <BidAsk />
+          )}
+          {/* ถ้า activePage เป็น 'TickMatch' ให้โชว์ TickMatch ทันที */}
+          {(activePage === "TickMatch " || activePage === "TickMatch" || location.pathname === "/TickMatch") && (
+             <TickMatch />
+          )}
+          {/* ถ้า activePage เป็น 'DRInsight' ให้โชว์ DRInsight ทันที */}
+          {(activePage === "DRInsight " || activePage === "DRInsight" || location.pathname === "/DRInsight") && (
+             <DRInsight />
           )}
 
           {/* MIT Page (✅ กู้คืนเนื้อหากลับมาแล้วครับ) */}

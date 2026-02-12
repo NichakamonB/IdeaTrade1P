@@ -224,6 +224,91 @@ export default function Sidebar({
       // ซึ่งจะไป setActivePage("flow") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
+  // --- Logic พิเศษสำหรับ "S50" ---
+      if (id === "s50") {
+      const isUnlocked = unlockedList.includes("s50");
+
+      // กรณี Free (ยังไม่ปลดล็อก) -> ให้เปิดหน้า Preview
+      if (!isUnlocked) {
+          setActivePage("S50");
+        // ถ้าไม่อยู่หน้า dashboard ให้ย้ายไป dashboard
+          if (location.pathname !== "/dashboard") {
+              navigate("/dashboard", { state: { goTo: "S50" } });
+          }
+          return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
+      }
+      // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
+      // ซึ่งจะไป setActivePage("s50") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+  }
+
+  // --- Logic พิเศษสำหรับ "Gold" ---
+      if (id === "Gold") {
+      const isUnlocked = unlockedList.includes("Gold");
+
+      // กรณี Free (ยังไม่ปลดล็อก) -> ให้เปิดหน้า Preview
+      if (!isUnlocked) {
+          setActivePage("Gold");
+        // ถ้าไม่อยู่หน้า dashboard ให้ย้ายไป dashboard
+          if (location.pathname !== "/dashboard") {
+              navigate("/dashboard", { state: { goTo: "Gold" } });
+          }
+          return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
+      }
+      // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
+      // ซึ่งจะไป setActivePage("Gold") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+  }
+
+  // --- Logic พิเศษสำหรับ "BidAsk" ---
+      if (id === "BidAsk") {
+      const isUnlocked = unlockedList.includes("BidAsk");
+
+      // กรณี Free (ยังไม่ปลดล็อก) -> ให้เปิดหน้า Preview
+      if (!isUnlocked) {
+          setActivePage("FlowIntraday");
+        // ถ้าไม่อยู่หน้า dashboard ให้ย้ายไป dashboard
+          if (location.pathname !== "/dashboard") {
+              navigate("/dashboard", { state: { goTo: "BidAsk" } });
+          }
+          return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
+      }
+      // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
+      // ซึ่งจะไป setActivePage("BidAsk") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+  }
+
+  // --- Logic พิเศษสำหรับ "​TickMatch" ---
+      if (id === "TickMatch") {
+      const isUnlocked = unlockedList.includes("TickMatch");
+
+      // กรณี Free (ยังไม่ปลดล็อก) -> ให้เปิดหน้า Preview
+      if (!isUnlocked) {
+          setActivePage("TickMatch");
+        // ถ้าไม่อยู่หน้า dashboard ให้ย้ายไป dashboard
+          if (location.pathname !== "/dashboard") {
+              navigate("/dashboard", { state: { goTo: "TickMatch" } });
+          }
+          return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
+      }
+      // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
+      // ซึ่งจะไป setActivePage("​TickMatch") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+  }
+
+  // --- Logic พิเศษสำหรับ "DR Insight" ---
+      if (id === "DRInsight") {
+      const isUnlocked = unlockedList.includes("DRInsight");
+
+      // กรณี Free (ยังไม่ปลดล็อก) -> ให้เปิดหน้า Preview
+      if (!isUnlocked) {
+          setActivePage("DRInsight");
+        // ถ้าไม่อยู่หน้า dashboard ให้ย้ายไป dashboard
+          if (location.pathname !== "/dashboard") {
+              navigate("/dashboard", { state: { goTo: "DRInsight" } });
+          }
+          return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
+      }
+      // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
+      // ซึ่งจะไป setActivePage("DRInsight") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+  }
+
     // --- Logic ปกติสำหรับหน้าอื่นๆ ---
     setActivePage(id);
     if (projectItem && openProject) openProject(projectItem);
