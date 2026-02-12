@@ -15,7 +15,7 @@ import FlowIntraday from "@/pages/Tools/FlowIntraday";
 import S50 from "@/pages/Tools/S50";
 import Gold from "@/pages/Tools/Gold";
 import BidAsk from "@/pages/Tools/BidAsk";
-// import TickMatch from "@/pages/Tools/TickMatch";
+import TickMatch from "@/pages/Tools/TickMatch";
 // import DRInsight from "@/pages/Tools/DRInsight";
 
 /* ================= CONSTANTS ================= */

@@ -187,10 +187,10 @@ export default function Sidebar({
           return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
       }
       // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
-      // ซึ่งจะไป setActivePage("fortune") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+      // ซึ่งจะไป setActivePage("petroleum") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
-  // --- Logic พิเศษสำหรับ "Rubber" ---
+  // --- Logic พิเศษสำหรับ "rubber" ---
       if (id === "rubber") {
       const isUnlocked = unlockedList.includes("rubber");
 
@@ -204,7 +204,7 @@ export default function Sidebar({
           return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
       }
       // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
-      // ซึ่งจะไป setActivePage("Rubber") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+      // ซึ่งจะไป setActivePage("rubber") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
   // --- Logic พิเศษสำหรับ "flow" ---
@@ -241,7 +241,7 @@ export default function Sidebar({
       // ซึ่งจะไป setActivePage("s50") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
-  // --- Logic พิเศษสำหรับ "Gold" ---
+  // --- Logic พิเศษสำหรับ "gold" ---
       if (id === "gold") {
       const isUnlocked = unlockedList.includes("gold");
 
@@ -255,10 +255,10 @@ export default function Sidebar({
           return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
       }
       // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
-      // ซึ่งจะไป setActivePage("Gold") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+      // ซึ่งจะไป setActivePage("gold") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
-  // --- Logic พิเศษสำหรับ "BidAsk" ---
+  // --- Logic พิเศษสำหรับ "bidask" ---
       if (id === "bidask") {
       const isUnlocked = unlockedList.includes("bidask");
 
@@ -272,12 +272,12 @@ export default function Sidebar({
           return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
       }
       // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
-      // ซึ่งจะไป setActivePage("BidAsk") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+      // ซึ่งจะไป setActivePage("bidask") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
-  // --- Logic พิเศษสำหรับ "​TickMatch" ---
-      if (id === "TickMatch") {
-      const isUnlocked = unlockedList.includes("TickMatch");
+  // --- Logic พิเศษสำหรับ "tickmatch" ---
+      if (id === "tickmatch") {
+      const isUnlocked = unlockedList.includes("tickmatch");
 
       // กรณี Free (ยังไม่ปลดล็อก) -> ให้เปิดหน้า Preview
       if (!isUnlocked) {
@@ -289,12 +289,12 @@ export default function Sidebar({
           return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
       }
       // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
-      // ซึ่งจะไป setActivePage("​TickMatch") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+      // ซึ่งจะไป setActivePage("tickmatch") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
-  // --- Logic พิเศษสำหรับ "DR Insight" ---
-      if (id === "DRInsight") {
-      const isUnlocked = unlockedList.includes("DRInsight");
+  // --- Logic พิเศษสำหรับ "dr insight" ---
+      if (id === "drinsight") {
+      const isUnlocked = unlockedList.includes("drinsight");
 
       // กรณี Free (ยังไม่ปลดล็อก) -> ให้เปิดหน้า Preview
       if (!isUnlocked) {
@@ -306,7 +306,7 @@ export default function Sidebar({
           return; // จบการทำงาน (ไม่ต้องไปทำ Logic ด้านล่าง)
       }
       // กรณี Member (ปลดล็อกแล้ว) -> ปล่อยผ่านให้ code ไหลลงไปทำ Logic ปกติ
-      // ซึ่งจะไป setActivePage("DRInsight") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
+      // ซึ่งจะไป setActivePage("dr insight") ทำให้ Dashboard แสดงข้อมูลอันเดิม (Tool ของจริง)
   }
 
     // --- Logic ปกติสำหรับหน้าอื่นๆ ---
