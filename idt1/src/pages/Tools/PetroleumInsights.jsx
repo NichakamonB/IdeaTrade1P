@@ -1,11 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
+const scrollbarHideStyle = {
+  msOverflowStyle: 'none',
+  scrollbarWidth: 'none'
+};
 
 export default function PetroleumInsights() {
   const navigate = useNavigate();
   const [isMember, setIsMember] = useState(false);
+  
+  // --- เพิ่ม Refs และ State สำหรับ Scroll (เหมือน StockFortuneTeller) ---
+  const scrollContainerRef = useRef(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(true);
 
-  // --- Logic เช็คสถานะ Member ---
+  // --- Logic คำนวณการโชว์ปุ่ม ---
+  const checkScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeft(scrollLeft > 1);
+      const isEnd = Math.ceil(scrollLeft + clientWidth) >= (scrollWidth - 2);
+      setShowRight(!isEnd);
+    }
+  };
+
+  // --- Logic สั่ง Scroll ---
+  const scroll = (direction) => {
+    if (scrollContainerRef.current) {
+      const { current } = scrollContainerRef;
+      const scrollAmount = 350;
+      if (direction === "left") {
+        current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+      } else {
+        current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+      }
+      setTimeout(checkScroll, 300); 
+    }
+  };
+
   useEffect(() => {
     try {
       const userProfile = localStorage.getItem("userProfile");
@@ -18,6 +51,11 @@ export default function PetroleumInsights() {
     } catch (error) {
       console.error("Error checking member status:", error);
     }
+
+    // เพิ่ม Event Listener สำหรับ Scroll
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
   }, []);
 
   const features = [
@@ -45,6 +83,13 @@ export default function PetroleumInsights() {
       {/* Background Ambience */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
 
+      {/* Style ซ่อน Scrollbar */}
+      <style>
+        {`
+          .hide-scrollbar::-webkit-scrollbar { display: none; }
+        `}
+      </style>
+
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 flex flex-col items-center">
 
         {/* --- Header Section --- */}
@@ -59,7 +104,7 @@ export default function PetroleumInsights() {
           </p>
         </div>
 
-        {/* --- Dashboard Image (Mac Window Style) --- */}
+        {/* --- Dashboard Image --- */}
         <div className="relative group w-full max-w-5xl mb-16">
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-700"></div>
           
@@ -82,30 +127,80 @@ export default function PetroleumInsights() {
           </div>
         </div>
 
-        {/* --- Features Section --- */}
+        {/* --- Features Section (ใช้แบบ Scroll เหมือน StockFortuneTeller) --- */}
         <div className="w-full max-w-5xl mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
             4 Main Features
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((item, index) => (
-              <div
-                key={index}
-                className="group bg-[#0f172a]/60 border border-slate-700/50 p-6 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300"
-              >
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
+          <div className="relative group">
+            
+            {/* 1. ปุ่มซ้าย (ปรับระยะห่างเหมือนกัน) */}
+            <button 
+              onClick={() => scroll("left")}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
+                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                         active:scale-95
+                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+              aria-label="Scroll Left"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* 2. Scroll Container */}
+            <div 
+              ref={scrollContainerRef}
+              onScroll={checkScroll} 
+              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+              style={scrollbarHideStyle}
+            >
+              {features.map((item, index) => (
+                <div
+                  key={index}
+                  // ล็อคความกว้าง w-[350px] md:w-[400px] เหมือนต้นแบบ
+                  className="
+                      w-[350px] md:w-[400px] flex-shrink-0 snap-center
+                      group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
+                      hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300
+                  "
+                >
+                  <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">
+                    {item.title}
+                  </h3>
+                  {/* ไม่จำกัดบรรทัด (เอา line-clamp ออก) */}
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* 3. ปุ่มขวา (ปรับระยะห่างเหมือนกัน) */}
+            <button 
+              onClick={() => scroll("right")}
+              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
+                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                         active:scale-95
+                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+              aria-label="Scroll Right"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
           </div>
         </div>
 
-        {/* --- CTA Buttons (Conditional Logic แบบเดียวกัน) --- */}
+        {/* --- CTA Buttons --- */}
         <div className="text-center w-full max-w-md mx-auto mt-4">
           {isMember ? (
             <button
