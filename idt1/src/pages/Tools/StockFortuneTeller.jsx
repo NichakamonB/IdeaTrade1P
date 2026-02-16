@@ -26,30 +26,46 @@ export default function StockFortuneTeller() {
     chart6: "Manager",
   });
 
+  const [symbol, setSymbol] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const symbols = [
+    "BANPU","BGRIM","EGCO","GPSC","GULF","OR","PTT","PTTEP",
+    "PTTGC","RATCH","TOP","IVL","BBL","KBANK","KTB","SCB",
+    "TISCO","TTB","KTC","SAWAD","MTC","TLI","ADVANC","DELTA",
+    "COM7","CCET","TRUE","CPALL","CPF","CBG","OSP","GLOBAL",
+    "HMPRO","BJC","CRC","ITC","TU","AOT","AWC","BDMS",
+    "BH","BEM","BTS","CPN","LH","MINT","SCGP"
+  ];
+
+  const filteredSymbols = symbols.filter(s =>
+    s.toLowerCase().includes(symbol.toLowerCase())
+  );
+
   /* ===============================
      MEMBER CHECK
   ================================ */
-useEffect(() => {
-  try {
-    const userProfile = localStorage.getItem("userProfile");
+  useEffect(() => {
+    try {
+      const userProfile = localStorage.getItem("userProfile");
 
-    if (userProfile) {
-      const user = JSON.parse(userProfile);
+      if (userProfile) {
+        const user = JSON.parse(userProfile);
 
-      if (user.unlockedItems && user.unlockedItems.includes("fortune")) {
-        setIsMember(true);
+        if (user.unlockedItems && user.unlockedItems.includes("fortune")) {
+          setIsMember(true);
 
-        // 🔥 เช็คว่าเคยเข้า tool แล้วหรือยัง
-        const hasEntered = sessionStorage.getItem("fortuneToolEntered");
-        if (hasEntered === "true") {
-          setEnteredTool(true);
+          // 🔥 เช็คว่าเคยเข้า tool แล้วหรือยัง
+          const hasEntered = sessionStorage.getItem("fortuneToolEntered");
+          if (hasEntered === "true") {
+            setEnteredTool(true);
+          }
         }
       }
+    } catch (error) {
+      console.error("Error checking member status:", error);
     }
-  } catch (error) {
-    console.error("Error checking member status:", error);
-  }
-}, []);
+  }, []);
 
   /* ===============================
      SCROLL LOGIC (ของเดิมทั้งหมด)
@@ -379,89 +395,315 @@ useEffect(() => {
   /* ==========================================================
      CASE 3 : เข้า Full Dashboard แล้ว
   =========================================================== */
+  function ChartCard({ title, type, onChange }) {
+    return (
+      <div className="bg-[#111827] rounded-xl border border-slate-700 p-4 h-[320px]">
+        
+        {/* Header */}
+        <div className="mb-3 flex justify-between items-center">
+          <select
+            value={type}
+            onChange={(e) => onChange(e.target.value)}
+            className="bg-[#1f2937] text-xs border border-slate-600 rounded-md px-2 py-1 focus:outline-none focus:border-cyan-500"
+          >
+            <option>Last</option>
+            <option>%Short</option>
+            <option>PredictTrend</option>
+            <option>Peak</option>
+            <option>Shareholder</option>
+            <option>Manager</option>
+          </select>
+
+          <span className="text-xs text-slate-400">{title}</span>
+        </div>
+
+        {/* Chart Area */}
+        <div className="w-full h-[250px] bg-[#0f172a] rounded-lg p-4 relative overflow-hidden">
+          <ChartRenderer type={type} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-[#0B1221] text-white px-6 py-6">
 
-                <div className="flex items-center justify-between mb-6">
-                  <div className="relative w-72">
-                    <input
-                      type="text"
-                      defaultValue="BANPU"
-                      className="w-full bg-[#111827] border border-slate-700 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-cyan-500"
-                    />
-                    <span className="absolute left-3 top-2.5 text-slate-400 text-sm">
-                      🔍
-                    </span>
-                  </div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="relative w-72">
+            <input
+              type="text"
+              value={symbol}
+              onChange={(e) => {
+                setSymbol(e.target.value);
+                setShowDropdown(true);
+              }}
+              onFocus={() => setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+              placeholder="Type a Symbol..."
+              className="w-full bg-[#111827] border border-slate-700 rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-cyan-500"
+            />
+            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">
+              🔍
+            </span>
 
-                  <div className="flex gap-3">
-                    <button className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-lg hover:border-cyan-500">
-                      🔔
-                    </button>
-                    <button className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-lg hover:border-cyan-500">
-                      ⟳
-                    </button>
-                    <button className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-lg hover:border-cyan-500">
-                      ⬇
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-                    <p className="text-slate-400 text-xs">LAST PRICE</p>
-                    <p className="text-green-400 text-lg font-bold">5.30 (+1.92%)</p>
-                  </div>
-
-                  <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-                    <p className="text-slate-400 text-xs">VOLUME</p>
-                    <p className="text-yellow-400 text-lg font-bold">62.8M</p>
-                  </div>
-
-                  <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-                    <p className="text-slate-400 text-xs">HIGH / LOW</p>
-                    <p className="text-white text-lg font-bold">5.35 / 5.15</p>
-                  </div>
-
-                  <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-                    <p className="text-slate-400 text-xs">MARKET STATUS</p>
-                    <p className="text-green-400 font-bold">● OPEN</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Object.entries(filters).map(([key, value]) => (
+            {showDropdown && symbol !== "" && (
+              <div className="absolute mt-2 w-full bg-[#111827] border border-slate-700 rounded-xl shadow-xl max-h-64 overflow-y-auto z-50">
+                {filteredSymbols.length > 0 ? (
+                  filteredSymbols.map((item, index) => (
                     <div
-                      key={key}
-                      className="bg-[#111827] rounded-xl border border-slate-700 p-4 h-[320px]"
+                      key={index}
+                      onClick={() => {
+                        setSymbol(item);
+                          setShowDropdown(false);
+                        }}
+                      className="px-4 py-2 text-sm hover:bg-cyan-500 hover:text-white cursor-pointer transition"
                     >
-                      <div className="mb-3">
-                        <select
-                          value={value}
-                          onChange={(e) =>
-                            setFilters({
-                              ...filters,
-                              [key]: e.target.value,
-                            })
-                          }
-                          className="bg-[#1f2937] text-xs border border-slate-600 rounded-md px-2 py-1 focus:outline-none focus:border-cyan-500"
-                        >
-                          <option>Last</option>
-                          <option>%Short</option>
-                          <option>PredictTrend</option>
-                          <option>Peak</option>
-                          <option>Shareholder</option>
-                          <option>Manager</option>
-                        </select>
-                      </div>
-
-                      <div className="w-full h-[250px] bg-[#0f172a] rounded-lg flex items-center justify-center text-slate-500 text-sm">
-                        {value} Chart
-                      </div>
+                      {item}
                     </div>
-                  ))}
-                </div>
-
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-sm text-slate-400">
+                    No results
+                  </div>
+              )}
               </div>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-lg hover:border-cyan-500">
+              🔔
+            </button>
+            <button className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-lg hover:border-cyan-500">
+              ⟳
+            </button>
+            <button className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-lg hover:border-cyan-500">
+                ⬇
+            </button>
+          </div>
+        </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+              <p className="text-slate-400 text-xs">LAST PRICE</p>
+                <p className="text-green-400 text-lg font-bold">5.30 (+1.92%)</p>
+            </div>
+
+            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+              <p className="text-slate-400 text-xs">VOLUME</p>
+              <p className="text-yellow-400 text-lg font-bold">62.8M</p>
+            </div>
+
+            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+              <p className="text-slate-400 text-xs">HIGH / LOW</p>
+              <p className="text-white text-lg font-bold">5.35 / 5.15</p>
+            </div>
+
+            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+              <p className="text-slate-400 text-xs">MARKET STATUS</p>
+                <p className="text-green-400 font-bold">● OPEN</p>
+              </div>
+          </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.entries(filters).map(([key, value]) => (
+                <ChartCard
+                  key={key}
+                  title={key}
+                  type={value}
+                  onChange={(newValue) =>
+                  setFilters({
+                    ...filters,
+                    [key]: newValue,
+                })
+              }
+            />
+          ))}
+      </div>
+    </div>
+  );
+}
+
+function ChartRenderer({ type }) {
+
+  const width = 420;
+  const height = 240;
+
+  const paddingLeft = 20;
+  const paddingRight = 40;
+  const paddingTop = 20;
+  const paddingBottom = 25;
+
+  const rawData = {
+    Last: [5.2,5.0,4.9,5.3,4.6,4.2,4.5],
+    "%ShortA": [12,14,13,15,18,20,17],
+    "%ShortB": [13,14,12,14,15,16,15],
+    PredictTrend: [22,23,20,24,26,25],
+    Peak: [5,6,5,18,9]
+  };
+
+  const data =
+    type === "%Short"
+      ? rawData["%ShortA"]
+      : rawData[type] || rawData["Last"];
+
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+
+  const normalizeY = (value) => {
+    return (
+      height -
+      paddingBottom -
+      ((value - min) / (max - min)) *
+        (height - paddingTop - paddingBottom)
+    );
+  };
+
+  const buildPath = (dataset) => {
+    return dataset.reduce((path, value, i, arr) => {
+      const x =
+        paddingLeft +
+        (i * (width - paddingLeft - paddingRight)) /
+          (arr.length - 1);
+      const y = normalizeY(value);
+
+      if (i === 0) return `M ${x},${y}`;
+
+      const prevX =
+        paddingLeft +
+        ((i - 1) *
+          (width - paddingLeft - paddingRight)) /
+          (arr.length - 1);
+      const prevY = normalizeY(arr[i - 1]);
+
+      const cp1x = prevX + (x - prevX) / 3;
+      const cp2x = prevX + (x - prevX) * 2 / 3;
+
+      return `${path} C ${cp1x},${prevY} ${cp2x},${y} ${x},${y}`;
+    }, "");
+  };
+
+  return (
+    <div className="relative w-full h-full">
+
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+
+        {/* Grid */}
+        {[...Array(5)].map((_, i) => {
+          const y =
+            paddingTop +
+            (i *
+              (height - paddingTop - paddingBottom)) /
+              4;
+          return (
+            <line
+              key={i}
+              x1={paddingLeft}
+              y1={y}
+              x2={width - paddingRight}
+              y2={y}
+              stroke="#1f2937"
+              strokeOpacity="0.35"
+              strokeWidth="0.8"
+            />
+          );
+        })}
+
+        {/* Baseline */}
+        <line
+          x1={paddingLeft}
+          y1={height - paddingBottom}
+          x2={width - paddingRight}
+          y2={height - paddingBottom}
+          stroke="#374151"
+          strokeWidth="1"
+        />
+
+        {/* %Short multi line */}
+        {type === "%Short" && (
+          <>
+            <path
+              d={buildPath(rawData["%ShortA"])}
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="1.8"
+            />
+            <path
+              d={buildPath(rawData["%ShortB"])}
+              fill="none"
+              stroke="#f97316"
+              strokeWidth="1.8"
+            />
+          </>
+        )}
+
+        {/* Last Area */}
+        {type === "Last" && (
+          <>
+            <defs>
+              <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25"/>
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <path
+              d={`${buildPath(rawData["Last"])} 
+                 L ${width - paddingRight},${height - paddingBottom} 
+                 L ${paddingLeft},${height - paddingBottom} Z`}
+              fill="url(#area)"
+            />
+
+            <path
+              d={buildPath(rawData["Last"])}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="1.8"
+            />
+          </>
+        )}
+
+        {/* PredictTrend */}
+        {type === "PredictTrend" && (
+          <path
+            d={buildPath(rawData["PredictTrend"])}
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="1.8"
+          />
+        )}
+
+        {/* Peak */}
+        {type === "Peak" && (
+          <>
+            <defs>
+              <linearGradient id="area2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#eab308" stopOpacity="0.25"/>
+                <stop offset="100%" stopColor="#eab308" stopOpacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <path
+              d={`${buildPath(rawData["Peak"])} 
+                 L ${width - paddingRight},${height - paddingBottom} 
+                 L ${paddingLeft},${height - paddingBottom} Z`}
+              fill="url(#area2)"
+            />
+
+            <path
+              d={buildPath(rawData["Peak"])}
+              fill="none"
+              stroke="#eab308"
+              strokeWidth="1.8"
+            />
+          </>
+        )}
+
+      </svg>
+
+      {/* bottom fade */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+
+    </div>
   );
 }

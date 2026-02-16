@@ -14,7 +14,7 @@ export default function PetroleumInsights() {
   const [enteredTool, setEnteredTool] = useState(false);
 
   const [period, setPeriod] = useState("MAX");
-  const [symbol, setSymbol] = useState("TOP");
+  const [symbol, setSymbol] = useState("");
   const [darkMode, setDarkMode] = useState(true);
 
   const [showLeft, setShowLeft] = useState(false);
@@ -102,6 +102,20 @@ export default function PetroleumInsights() {
       desc: "Follow capital rotation in energy sector.",
     },
   ];
+
+  const [symbolQuery, setSymbolQuery] = useState("");
+  const [showSymbolDropdown, setShowSymbolDropdown] = useState(false);
+
+  const symbolList = [
+    "BBGI","BCP","BCPG","BANPU","BGRIM","EA","ESSO",
+    "GULF","IRPC","IVL","PTT","PTTEP","TOP"
+  ];
+
+  const filteredSymbols = symbolList.filter(s =>
+    s.toLowerCase().includes(symbolQuery.toLowerCase())
+  );
+
+  const symbolBounceClass = !symbol ? "symbol-bounce" : "";
 
   /* ==========================================================
      CASE 1 : PREVIEW VERSION (เหมือน StockFortune 90%+)
@@ -416,6 +430,22 @@ export default function PetroleumInsights() {
 /* ==========================================================
    CASE 3 : FULL PRODUCTION PETROLEUM DASHBOARD
 ========================================================== */
+<style>
+{`
+@keyframes symbolBounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.04); }
+  50% { transform: scale(0.98); }
+  70% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.symbol-bounce {
+  animation: symbolBounce 1.8s ease-in-out infinite;
+}
+`}
+</style>
+
 if (isMember && enteredTool) {
 
   const metrics = [
@@ -448,22 +478,128 @@ if (isMember && enteredTool) {
             </div>
 
             {/* Symbol */}
-            <select
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-md text-sm"
-            >
-              <option value="TOP">Symbol: TOP</option>
-              <option value="PTT">Symbol: PTT</option>
-              <option value="BCP">Symbol: BCP</option>
-            </select>
+            <div className="relative w-56">
+
+              {/* INPUT FIELD */}
+              <div
+                className={`
+                  relative
+                  bg-[#111827]
+                  border border-slate-700
+                  rounded-md
+                  px-4 py-3
+                  flex items-center
+                  ${!symbol && !symbolQuery ? "symbol-bounce" : ""}
+                `}
+              >
+                <input
+                  value={symbolQuery}
+                  onChange={(e) => {
+                    setSymbolQuery(e.target.value);
+                    setShowSymbolDropdown(true);
+                    setSymbol(""); // clear selected when typing
+                  }}
+                  onFocus={() => setShowSymbolDropdown(true)}
+                  placeholder=""
+                  className="w-full bg-transparent outline-none text-white text-sm"
+                />
+
+                <div className="flex items-center gap-2">
+
+                  {symbol && (
+                    <span className="text-white">
+                      {symbol}
+                    </span>
+                  )}
+
+                </div>
+
+                <div className="flex items-center gap-2">
+
+                  {/* CLEAR BUTTON */}
+                  {(symbol || symbolQuery) && (
+                    <button
+                      onClick={() => {
+                        setSymbol("");
+                        setSymbolQuery("");
+                      }}
+                      className="text-slate-400 hover:text-white text-xs ml-2"
+                    >
+                      ✕
+                    </button>
+                  )}
+
+                  <span
+                    onClick={() => setShowSymbolDropdown(!showSymbolDropdown)}
+                    className="text-slate-400 text-xs ml-2 cursor-pointer"
+                  >
+                    ▾
+                  </span>
+                </div>
+              </div>
+
+              {/* FLOATING LABEL */}
+              <label
+                className={`
+                  absolute left-4 px-2 transition-all duration-200 pointer-events-none
+                  ${
+                    symbol || symbolQuery || showSymbolDropdown
+                      ? "-top-2 text-xs bg-[#0c111b]"
+                      : "top-1/2 -translate-y-1/2 text-sm"
+                  }
+                `}
+              >
+                Symbol*
+              </label>
+
+              {/* DROPDOWN */}
+              {showSymbolDropdown && (
+                <div className="absolute mt-2 w-full bg-[#0f172a] border border-slate-700 rounded-xl shadow-2xl max-h-72 overflow-y-auto z-50">
+
+                  {/* List */}
+                  {filteredSymbols.length > 0 ? (
+                    filteredSymbols.map((item, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setSymbol(item);
+                          setSymbolQuery(item);
+                          setShowSymbolDropdown(false);
+                        }}
+                        className="px-4 py-2 text-sm text-slate-300 hover:bg-cyan-500 hover:text-white cursor-pointer transition"
+                      >
+                        {item}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-slate-500">
+                      No results
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
 
             {/* Oil Type */}
-            <select className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-md text-sm">
-              <option>GASOHOL95</option>
-              <option>WTI</option>
-              <option>BRENT</option>
-            </select>
+            <select
+            className="bg-[#111827] border border-slate-700 px-4 py-3 rounded-md text-sm text-white outline-none focus:border-cyan-400 w-64"
+          >
+            <option value="">Select oil type</option>
+
+            <option>GASOHOL95 E10</option>
+            <option>GASOHOL91</option>
+            <option>GASOHOL95 E20</option>
+            <option>GASOHOL95 E85</option>
+
+            <option>H-DIESEL</option>
+
+            <option>FO 600 (1) 2%S</option>
+            <option>FO 1500 (2) 2%S</option>
+
+            <option>LPG</option>
+            <option>ULG95</option>
+          </select>
           </div>
 
           {/* Period Buttons */}
@@ -490,7 +626,7 @@ if (isMember && enteredTool) {
           {metrics.map(m => (
             <div
               key={m.title}
-              className="bg-[#111827] border border-slate-700 rounded-lg p-4"
+              className="bg-[#111827] border border-slate-700 px-4 py-3 rounded-md text-sm text-white outline-none focus:border-cyan-400 w-72"
             >
               <p className="text-xs text-slate-400">{m.title}</p>
 
@@ -536,6 +672,52 @@ if (isMember && enteredTool) {
 }
 
 function PremiumChart({ title, step }) {
+
+  const width = 420;
+  const height = 240;
+
+  const paddingLeft = 25;
+  const paddingRight = 45;
+  const paddingTop = 20;
+  const paddingBottom = 30;
+
+  const data = step
+    ? [28,28,28,20,20,20,15]
+    : [16.5,17.2,16.6,17.8,17.4,16.8,17.9];
+
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+
+  const normalizeY = (value) =>
+    height -
+    paddingBottom -
+    ((value - min) / (max - min)) *
+      (height - paddingTop - paddingBottom);
+
+  const buildPath = (dataset) => {
+    return dataset.reduce((path, value, i, arr) => {
+      const x =
+        paddingLeft +
+        (i * (width - paddingLeft - paddingRight)) /
+          (arr.length - 1);
+      const y = normalizeY(value);
+
+      if (i === 0) return `M ${x},${y}`;
+
+      const prevX =
+        paddingLeft +
+        ((i - 1) *
+          (width - paddingLeft - paddingRight)) /
+          (arr.length - 1);
+      const prevY = normalizeY(arr[i - 1]);
+
+      const cp1x = prevX + (x - prevX) / 3;
+      const cp2x = prevX + (x - prevX) * 2 / 3;
+
+      return `${path} C ${cp1x},${prevY} ${cp2x},${y} ${x},${y}`;
+    }, "");
+  };
+
   const gradientId = `area-${title.replace(/\s/g, "")}`;
 
   return (
@@ -543,38 +725,115 @@ function PremiumChart({ title, step }) {
 
       <p className="text-xs text-slate-400 mb-4">{title}</p>
 
-      <div className="relative w-full h-[230px] bg-[#0f172a] rounded-xl overflow-hidden">
+      <div className="relative w-full h-[240px] bg-[#0f172a] rounded-xl overflow-hidden">
 
-        <svg viewBox="0 0 100 40" className="absolute inset-0 w-full h-full">
+        {/* Watermark */}
+        <div className="absolute inset-0 flex items-center justify-center text-5xl font-bold text-white/5 select-none">
+          {title}
+        </div>
+
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
 
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4"/>
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.35"/>
               <stop offset="100%" stopColor="#22c55e" stopOpacity="0"/>
             </linearGradient>
           </defs>
 
-          <path
-            d={
-              step
-                ? "M0 8 H40 V22 H80 V28 H100"
-                : "M0 28 Q20 8 40 20 T80 12 T100 5"
-            }
-            fill="none"
-            stroke="#22c55e"
-            strokeWidth="1.5"
+          {/* GRID */}
+          {[...Array(6)].map((_, i) => {
+            const y =
+              paddingTop +
+              (i * (height - paddingTop - paddingBottom)) /
+                5;
+            return (
+              <line
+                key={i}
+                x1={paddingLeft}
+                y1={y}
+                x2={width - paddingRight}
+                y2={y}
+                stroke="#1f2937"
+                strokeOpacity="0.4"
+                strokeWidth="0.8"
+              />
+            );
+          })}
+
+          {/* BASELINE */}
+          <line
+            x1={paddingLeft}
+            y1={height - paddingBottom}
+            x2={width - paddingRight}
+            y2={height - paddingBottom}
+            stroke="#374151"
+            strokeWidth="1"
           />
 
-          <path
-            d={
-              step
-                ? "M0 8 H40 V22 H80 V28 H100 V40 H0 Z"
-                : "M0 28 Q20 8 40 20 T80 12 T100 5 V40 H0 Z"
-            }
-            fill={`url(#${gradientId})`}
-          />
+          {/* STEP STYLE */}
+          {step ? (
+            <>
+              <path
+                d={`M ${paddingLeft},${normalizeY(data[0])}
+                   H ${paddingLeft + (width - paddingLeft - paddingRight)/3}
+                   V ${normalizeY(data[3])}
+                   H ${paddingLeft + (width - paddingLeft - paddingRight)*0.75}
+                   V ${normalizeY(data[6])}
+                   H ${width - paddingRight}`}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="1.8"
+              />
+            </>
+          ) : (
+            <>
+              {/* AREA */}
+              <path
+                d={`${buildPath(data)}
+                   L ${width - paddingRight},${height - paddingBottom}
+                   L ${paddingLeft},${height - paddingBottom} Z`}
+                fill={`url(#${gradientId})`}
+              />
+
+              {/* LINE */}
+              <path
+                d={buildPath(data)}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="1.8"
+              />
+            </>
+          )}
+
+          {/* Y AXIS */}
+          {[...Array(5)].map((_, i) => {
+            const value =
+              max - ((max - min) / 4) * i;
+            const y =
+              paddingTop +
+              (i * (height - paddingTop - paddingBottom)) /
+                4;
+
+            return (
+              <text
+                key={i}
+                x={width - 5}
+                y={y + 4}
+                textAnchor="end"
+                fontSize="10"
+                fill="#6b7280"
+              >
+                {value.toFixed(1)}
+              </text>
+            );
+          })}
 
         </svg>
+
+        {/* Bottom Fade */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+
       </div>
     </div>
   );
