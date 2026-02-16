@@ -1,3 +1,4 @@
+// src/pages/tools/S50.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +17,10 @@ export default function S50() {
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
   const [timeframe, setTimeframe] = useState("Day");
+
+  // --- [NEW] Refs สำหรับระบบเลื่อนอัตโนมัติ ---
+  const scrollDirection = useRef(1); // 1 = ขวา, -1 = ซ้าย
+  const isPaused = useRef(false);    // เก็บสถานะว่าเมาส์ชี้อยู่ไหม
 
   /* ================= MEMBER CHECK ================= */
   useEffect(() => {
@@ -39,7 +44,7 @@ export default function S50() {
     }
   }, []);
 
-  /* ================= SCROLL ================= */
+  /* ================= SCROLL LOGIC (Manual + Auto) ================= */
   const checkScroll = () => {
     if (!scrollContainerRef.current) return;
 
@@ -55,14 +60,61 @@ export default function S50() {
   const scroll = (direction) => {
     if (!scrollContainerRef.current) return;
 
-    scrollContainerRef.current.scrollBy({
-      left: direction === "left" ? -350 : 350,
-      behavior: "smooth",
-    });
+    // [NEW] หยุด Auto ชั่วคราวเมื่อกดปุ่ม
+    isPaused.current = true;
+
+    const { current } = scrollContainerRef;
+    const scrollAmount = 350;
+
+    if (direction === "left") {
+        current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+        scrollDirection.current = -1; // อัปเดตทิศทาง Auto เป็นซ้าย
+    } else {
+        current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        scrollDirection.current = 1;  // อัปเดตทิศทาง Auto เป็นขวา
+    }
 
     setTimeout(checkScroll, 300);
+    
+    // [NEW] ให้ Auto ทำงานต่อหลังจากกดปุ่มไปสักพัก (0.5 วิ)
+    setTimeout(() => { isPaused.current = false }, 500);
   };
 
+  // [NEW] Auto Scroll Effect
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    
+    // ถ้าหา container ไม่เจอ (เช่น อยู่หน้า Dashboard) ให้จบ
+    if (!container) return;
+
+    const speed = 1;         // ความเร็ว (pixel)
+    const intervalTime = 15; // ความถี่ (ms)
+
+    const autoScrollInterval = setInterval(() => {
+      // ถ้าเมาส์ชี้อยู่ (Pause) หรือ Container หายไป ให้ข้ามรอบนี้
+      if (isPaused.current || !container) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // ตรวจสอบการชนขอบ เพื่อกลับทิศ
+      if (scrollDirection.current === 1 && Math.ceil(scrollLeft) >= maxScroll - 2) {
+        scrollDirection.current = -1; // ชนขวา -> เด้งกลับซ้าย
+      } else if (scrollDirection.current === -1 && scrollLeft <= 2) {
+        scrollDirection.current = 1;  // ชนซ้าย -> เด้งกลับขวา
+      }
+
+      // สั่งเลื่อน
+      container.scrollLeft += (scrollDirection.current * speed);
+      
+      // อัปเดตปุ่มลูกศร
+      checkScroll();
+    }, intervalTime);
+
+    return () => clearInterval(autoScrollInterval);
+  }, [isMember, enteredTool]); // รันใหม่เมื่อเปลี่ยนหน้า View
+
+  // Resize Listener
   useEffect(() => {
     checkScroll();
     window.addEventListener("resize", checkScroll);
@@ -148,18 +200,23 @@ export default function S50() {
             4 Main Features
           </h2>
 
-          <div className="relative group">
+          {/* [NEW] Wrapper for Pause on Hover */}
+          <div 
+            className="relative group"
+            onMouseEnter={() => isPaused.current = true}
+            onMouseLeave={() => isPaused.current = false}
+          >
             
             {/* 1. ปุ่มซ้าย */}
             <button 
               onClick={() => scroll("left")}
               className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
               aria-label="Scroll Left"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,11 +224,11 @@ export default function S50() {
               </svg>
             </button>
 
-            {/* 2. Scroll Container */}
+            {/* 2. Scroll Container (Removed snap-x, scroll-smooth for Auto Scroll) */}
             <div 
               ref={scrollContainerRef}
               onScroll={checkScroll} 
-              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+              className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
               style={scrollbarHideStyle}
             >
               {features.map((item, index) => (
@@ -197,12 +254,12 @@ export default function S50() {
             <button 
               onClick={() => scroll("right")}
               className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
               aria-label="Scroll Right"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,33 +272,21 @@ export default function S50() {
 
         {/* --- CTA Buttons --- */}
         <div className="text-center w-full max-w-md mx-auto mt-4">
-          {isMember ? (
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full md:w-auto px-8 py-3 rounded-full bg-slate-800 text-white font-semibold border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300"
+            >
+              Sign In
+            </button>
+
             <button
               onClick={() => navigate("/member-register")}
-              className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
+              className="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
             >
-              <span className="mr-2">Start Using Tool</span>
-              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              Join Membership
             </button>
-          ) : (
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => navigate("/login")}
-                className="w-full md:w-auto px-8 py-3 rounded-full bg-slate-800 text-white font-semibold border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300"
-              >
-                Sign In
-              </button>
-
-              <button
-                onClick={() => navigate("/member-register")}
-                className="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
-              >
-                Join Membership
-              </button>
-            </div>
-          )}
+          </div>
         </div>
 
       </div>
@@ -250,7 +295,7 @@ export default function S50() {
   }
 
   /* ==========================================================
-     CASE 2 : MEMBER BUT NOT ENTERED
+    CASE 2 : MEMBER BUT NOT ENTERED
   ========================================================== */
   if (isMember && !enteredTool) {
     return (
@@ -309,18 +354,23 @@ export default function S50() {
             4 Main Features
           </h2>
 
-          <div className="relative group">
+          {/* [NEW] Wrapper for Pause on Hover */}
+          <div 
+            className="relative group"
+            onMouseEnter={() => isPaused.current = true}
+            onMouseLeave={() => isPaused.current = false}
+          >
             
             {/* 1. ปุ่มซ้าย */}
             <button 
               onClick={() => scroll("left")}
               className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
               aria-label="Scroll Left"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,7 +382,7 @@ export default function S50() {
             <div 
               ref={scrollContainerRef}
               onScroll={checkScroll} 
-              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+              className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
               style={scrollbarHideStyle}
             >
               {features.map((item, index) => (
@@ -358,12 +408,12 @@ export default function S50() {
             <button 
               onClick={() => scroll("right")}
               className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
               aria-label="Scroll Right"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,17 +427,17 @@ export default function S50() {
         {/* --- CTA Buttons --- */}
         <div className="text-center w-full max-w-md mx-auto mt-4">
           <button
-              onClick={() => {
-                setEnteredTool(true);
-                localStorage.setItem("s50ToolEntered", "true"); // 🔥 จำสถานะ
-              }}
-              className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
-            >
-              <span className="mr-2">Start Using Tool</span>
-              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
+            onClick={() => {
+              setEnteredTool(true);
+              localStorage.setItem("s50ToolEntered", "true"); // 🔥 จำสถานะ
+            }}
+            className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
+          >
+            <span className="mr-2">Start Using Tool</span>
+            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
         </div>
 
       </div>
@@ -396,106 +446,106 @@ export default function S50() {
   }
 
   /* ==========================================================
-   CASE 3 : TOOL SCREEN
-========================================================== */
+    CASE 3 : TOOL SCREEN
+  ========================================================== */
 
-return (
-  <div className="w-full min-h-screen bg-[#0b111a] text-white px-6 py-6">
+  return (
+    <div className="w-full min-h-screen bg-[#0b111a] text-white px-6 py-6">
 
-    <div className="max-w-[1600px] mx-auto">
+      <div className="max-w-[1600px] mx-auto">
 
-      {/* ================= TOP HEADER ================= */}
-      <div className="flex items-center justify-between mb-6">
+        {/* ================= TOP HEADER ================= */}
+        <div className="flex items-center justify-between mb-6">
 
-        {/* LEFT SIDE */}
-        <div className="flex items-center gap-4">
+          {/* LEFT SIDE */}
+          <div className="flex items-center gap-4">
 
-          {/* Back Button */}
-          <button
-            onClick={() => {
-              setEnteredTool(false);
-              sessionStorage.removeItem("s50ToolEntered");
-            }}
-            className="text-slate-400 hover:text-white transition"
-          >
-            ←
-          </button>
-
-          {/* Symbol Selector */}
-          <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
-            <span className="text-sm">🔍</span>
-            <select className="bg-transparent text-sm outline-none text-white">
-              <option>S50H26</option>
-              <option>S50M26</option>
-              <option>S50U26</option>
-            </select>
-          </div>
-
-        </div>
-
-        {/* CENTER BADGES */}
-        <div className="flex items-center gap-4">
-
-          {/* SIGNAL */}
-          <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
-            <span className="text-xs text-slate-400">SIGNAL</span>
-            <span className="text-green-400 font-semibold text-sm">
-              LONG ↑
-            </span>
-          </div>
-
-          {/* TREND SCORE */}
-          <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
-            <span className="text-xs text-slate-400">TREND SCORE</span>
-            <span className="text-white font-semibold text-sm">
-              8/10
-            </span>
-          </div>
-
-          {/* STATUS */}
-          <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
-            <span className="text-xs text-slate-400">STATUS</span>
-            <span className="text-blue-400 font-semibold text-sm">
-              CONFIRM
-            </span>
-          </div>
-
-        </div>
-
-        {/* RIGHT SIDE TIMEFRAME */}
-        <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 p-1 rounded-lg">
-
-          {["15m", "1H", "Day", "Week"].map((tf) => (
+            {/* Back Button */}
             <button
-              key={tf}
-              onClick={() => setTimeframe(tf)}
-              className={`px-3 py-1 text-xs rounded-md transition-all duration-200
-                ${
-                  timeframe === tf
-                    ? "bg-slate-600 text-white shadow-inner"
-                    : "text-slate-400 hover:text-white hover:bg-slate-700/50"
-                }`}
+              onClick={() => {
+                setEnteredTool(false);
+                sessionStorage.removeItem("s50ToolEntered");
+              }}
+              className="text-slate-400 hover:text-white transition"
             >
-              {tf}
+              ←
             </button>
-          ))}
+
+            {/* Symbol Selector */}
+            <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
+              <span className="text-sm">🔍</span>
+              <select className="bg-transparent text-sm outline-none text-white">
+                <option>S50H26</option>
+                <option>S50M26</option>
+                <option>S50U26</option>
+              </select>
+            </div>
+
+          </div>
+
+          {/* CENTER BADGES */}
+          <div className="flex items-center gap-4">
+
+            {/* SIGNAL */}
+            <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
+              <span className="text-xs text-slate-400">SIGNAL</span>
+              <span className="text-green-400 font-semibold text-sm">
+                LONG ↑
+              </span>
+            </div>
+
+            {/* TREND SCORE */}
+            <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
+              <span className="text-xs text-slate-400">TREND SCORE</span>
+              <span className="text-white font-semibold text-sm">
+                8/10
+              </span>
+            </div>
+
+            {/* STATUS */}
+            <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
+              <span className="text-xs text-slate-400">STATUS</span>
+              <span className="text-blue-400 font-semibold text-sm">
+                CONFIRM
+              </span>
+            </div>
+
+          </div>
+
+          {/* RIGHT SIDE TIMEFRAME */}
+          <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 p-1 rounded-lg">
+
+            {["15m", "1H", "Day", "Week"].map((tf) => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                className={`px-3 py-1 text-xs rounded-md transition-all duration-200
+                  ${
+                    timeframe === tf
+                      ? "bg-slate-600 text-white shadow-inner"
+                      : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+                  }`}
+              >
+                {tf}
+              </button>
+            ))}
+
+          </div>
+        </div>
+
+        {/* ================= CHART GRID ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <ChartCard title="1. Last (SET50 Daily)" />
+          <ChartCard title="2. Confirm Up/Down S50" />
+          <ChartCard title="3. Trend (Volume Flow)" />
+          <ChartCard title="4. Mid-Trend (SET Context)" />
 
         </div>
-      </div>
-
-      {/* ================= CHART GRID ================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <ChartCard title="1. Last (SET50 Daily)" />
-        <ChartCard title="2. Confirm Up/Down S50" />
-        <ChartCard title="3. Trend (Volume Flow)" />
-        <ChartCard title="4. Mid-Trend (SET Context)" />
 
       </div>
-
     </div>
-  </div>
-);
+  );
 }
 
 /* ================= REUSABLE CHART CARD ================= */

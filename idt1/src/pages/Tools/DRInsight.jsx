@@ -20,11 +20,15 @@ export default function DRInsight() {
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
 
-  // Filter States for Dashboard Sidebars (ของเดิม DR Insight)
+  // --- [NEW 1] Refs สำหรับระบบเลื่อนอัตโนมัติ ---
+  const scrollDirection = useRef(1); // 1 = ขวา, -1 = ซ้าย
+  const isPaused = useRef(false);    // เก็บสถานะว่าเมาส์ชี้อยู่ไหม
+
+  // Filter States for Dashboard Sidebars
   const [usaFilter, setUsaFilter] = useState("");
   const [asiaFilter, setAsiaFilter] = useState("");
 
-  // Chart Selections (State สำหรับ Dropdown ในแต่ละกราฟ)
+  // Chart Selections
   const [chartSelections, setChartSelections] = useState({
     chart1: "AAPL80X",
     chart2: "BABA80",
@@ -39,12 +43,8 @@ export default function DRInsight() {
       const userProfile = localStorage.getItem("userProfile");
       if (userProfile) {
         const user = JSON.parse(userProfile);
-
-        // เช็คสิทธิ์ 'dr'
         if (user.unlockedItems && user.unlockedItems.includes("dr")) {
           setIsMember(true);
-
-          // เช็คว่าเคยเข้า tool แล้วหรือยัง (ใช้ sessionStorage ให้เหมือนกับตอนกดปุ่ม Start)
           const hasEntered = sessionStorage.getItem("drToolEntered");
           if (hasEntered === "true") {
             setEnteredTool(true);
@@ -57,31 +57,79 @@ export default function DRInsight() {
   }, []);
 
   /* ===============================
-      2. SCROLL LOGIC (เหมือนต้นแบบ)
+      2. SCROLL LOGIC (Manual & Auto)
   ================================ */
   const checkScroll = () => {
     if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = 
-      scrollContainerRef.current;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setShowLeft(scrollLeft > 1);
-      const isEnd = 
-      Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2;
+      const isEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2;
       setShowRight(!isEnd);
     }
   };
 
   const scroll = (direction) => {
     if (scrollContainerRef.current) {
+      // เมื่อกดปุ่ม ให้หยุด Auto ชั่วคราวกันตีกัน
+      isPaused.current = true;
+
       const { current } = scrollContainerRef;
       const scrollAmount = 350;
+      
       if (direction === "left") {
         current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+        scrollDirection.current = -1; // อัปเดตทิศทาง Auto ให้ไปทางซ้ายตาม
       } else {
         current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        scrollDirection.current = 1;  // อัปเดตทิศทาง Auto ให้ไปทางขวาตาม
       }
+      
       setTimeout(checkScroll, 300);
+      
+      // ปล่อยให้ Auto ทำงานต่อหลังจากกดปุ่มไปสักพัก (500ms)
+      setTimeout(() => { isPaused.current = false }, 500);
     }
   };
+
+  /* ===============================
+      [NEW 2] AUTO SCROLL EFFECT
+  ================================ */
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    
+    // ถ้าหา container ไม่เจอ (เช่น อยู่หน้า Dashboard) ให้จบ
+    if (!container) return;
+
+    const speed = 1;         // ความเร็ว (pixel)
+    const intervalTime = 15; // ความถี่ (ms)
+
+    const autoScrollInterval = setInterval(() => {
+      // ถ้าเมาส์ชี้อยู่ (Pause) หรือ Container หายไป ให้ข้ามรอบนี้
+      if (isPaused.current || !container) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // ตรวจสอบการชนขอบ เพื่อกลับทิศ
+      // ชนขวา -> เด้งกลับซ้าย
+      if (scrollDirection.current === 1 && Math.ceil(scrollLeft) >= maxScroll - 2) {
+        scrollDirection.current = -1;
+      } 
+      // ชนซ้าย -> เด้งกลับขวา
+      else if (scrollDirection.current === -1 && scrollLeft <= 2) {
+        scrollDirection.current = 1;
+      }
+
+      // สั่งเลื่อน
+      container.scrollLeft += (scrollDirection.current * speed);
+      
+      // อัปเดตปุ่มลูกศร
+      checkScroll();
+    }, intervalTime);
+
+    // Cleanup
+    return () => clearInterval(autoScrollInterval);
+  }, [isMember, enteredTool]); // รันใหม่เมื่อเปลี่ยนหน้า View
 
   /* ===============================
       3. DATA MOCKUP (Lists)
@@ -154,7 +202,7 @@ export default function DRInsight() {
                 <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
               </div>
               <div className="aspect-[16/9] w-full bg-[#0B1221]">
-                {/* *** อย่าลืมเปลี่ยน path รูปภาพให้ถูกต้อง *** */}
+                {/* *** ตรวจสอบ path รูปภาพ *** */}
                 <img src="/src/assets/images/DRInsight.png" alt="DR Insight Preview" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-500" />
               </div>
             </div>
@@ -165,7 +213,13 @@ export default function DRInsight() {
             <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
               4 Main Features
             </h2>
-            <div className="relative group">
+            
+            {/* [NEW 3] ใส่ Wrapper เพื่อดักจับ Mouse Hover สำหรับหยุด Auto Scroll */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
+            >
               {/* Left Button */}
               <button 
                 onClick={() => scroll("left")}
@@ -174,10 +228,15 @@ export default function DRInsight() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
 
-              {/* Scroll Container */}
-              <div ref={scrollContainerRef} onScroll={checkScroll} className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth" style={scrollbarHideStyle}>
+              {/* Scroll Container (แก้แล้ว: ลบ snap ทิ้งเพื่อให้เลื่อนไหล) */}
+              <div 
+                ref={scrollContainerRef} 
+                onScroll={checkScroll} 
+                className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar" 
+                style={scrollbarHideStyle}
+              >
                 {features.map((item, index) => (
-                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 snap-center group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
+                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
                     <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">{item.title}</h3>
                     <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
                   </div>
@@ -248,7 +307,13 @@ export default function DRInsight() {
             <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
               4 Main Features
             </h2>
-            <div className="relative group">
+            
+            {/* [NEW 3] ใส่ Wrapper เพื่อดักจับ Mouse Hover สำหรับหยุด Auto Scroll */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
+            >
               {/* Left Button */}
               <button 
                 onClick={() => scroll("left")}
@@ -257,10 +322,15 @@ export default function DRInsight() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
 
-              {/* Scroll Container */}
-              <div ref={scrollContainerRef} onScroll={checkScroll} className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth" style={scrollbarHideStyle}>
+              {/* Scroll Container (แก้แล้ว: ลบ snap ทิ้งเพื่อให้เลื่อนไหล) */}
+              <div 
+                ref={scrollContainerRef} 
+                onScroll={checkScroll} 
+                className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar" 
+                style={scrollbarHideStyle}
+              >
                 {features.map((item, index) => (
-                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 snap-center group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
+                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
                     <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">{item.title}</h3>
                     <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
                   </div>
@@ -412,8 +482,8 @@ export default function DRInsight() {
                             <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
                                 <defs>
                                     <linearGradient id={`grad-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
-                                        <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
+                                            <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
+                                            <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
                                     </linearGradient>
                                 </defs>
                                 <path 
@@ -434,7 +504,7 @@ export default function DRInsight() {
                                         : index === 1 
                                         ? "M0,90 C40,90 80,60 120,80 C160,50 200,60 240,40 L300,20"
                                         : "M0,20 C50,40 100,20 150,50 C200,60 250,80 300,90"
-                                       ) + " V 100 H 0 Z"} 
+                                    ) + " V 100 H 0 Z"} 
                                     fill={`url(#grad-${index})`} 
                                     stroke="none" 
                                 />

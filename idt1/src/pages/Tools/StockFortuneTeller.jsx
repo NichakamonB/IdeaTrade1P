@@ -1,4 +1,4 @@
-// src/pages/tools/stockfortuneteller.jsx
+// src/pages/tools/StockFortuneTeller.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -17,6 +17,10 @@ export default function StockFortuneTeller() {
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
 
+  // --- [NEW] Refs สำหรับระบบเลื่อนอัตโนมัติ ---
+  const scrollDirection = useRef(1); // 1 = ขวา, -1 = ซ้าย
+  const isPaused = useRef(false);    // เก็บสถานะว่าเมาส์ชี้อยู่ไหม
+
   const [filters, setFilters] = useState({
     chart1: "Last",
     chart2: "%Short",
@@ -26,6 +30,7 @@ export default function StockFortuneTeller() {
     chart6: "Manager",
   });
 
+  // --- [NEW] Search Logic ---
   const [symbol, setSymbol] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -43,7 +48,7 @@ export default function StockFortuneTeller() {
   );
 
   /* ===============================
-     MEMBER CHECK
+      MEMBER CHECK
   ================================ */
   useEffect(() => {
     try {
@@ -68,7 +73,7 @@ export default function StockFortuneTeller() {
   }, []);
 
   /* ===============================
-     SCROLL LOGIC (ของเดิมทั้งหมด)
+      SCROLL LOGIC (Manual + Auto)
   ================================ */
   const checkScroll = () => {
     if (scrollContainerRef.current) {
@@ -83,19 +88,70 @@ export default function StockFortuneTeller() {
 
   const scroll = (direction) => {
     if (scrollContainerRef.current) {
+      // [NEW] หยุด Auto ชั่วคราวเมื่อกดปุ่ม
+      isPaused.current = true;
+
       const { current } = scrollContainerRef;
       const scrollAmount = 350;
+
       if (direction === "left") {
         current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+        scrollDirection.current = -1; // อัปเดตทิศทาง Auto เป็นซ้าย
       } else {
         current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        scrollDirection.current = 1;  // อัปเดตทิศทาง Auto เป็นขวา
       }
+
       setTimeout(checkScroll, 300);
+      
+      // [NEW] ให้ Auto ทำงานต่อหลังจากกดปุ่มไปสักพัก (0.5 วิ)
+      setTimeout(() => { isPaused.current = false }, 500);
     }
   };
 
+  // [NEW] Auto Scroll Effect
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    
+    // ถ้าหา container ไม่เจอ (เช่น อยู่หน้า Dashboard) ให้จบ
+    if (!container) return;
+
+    const speed = 1;         // ความเร็ว (pixel)
+    const intervalTime = 15; // ความถี่ (ms)
+
+    const autoScrollInterval = setInterval(() => {
+      // ถ้าเมาส์ชี้อยู่ (Pause) หรือ Container หายไป ให้ข้ามรอบนี้
+      if (isPaused.current || !container) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // ตรวจสอบการชนขอบ เพื่อกลับทิศ
+      if (scrollDirection.current === 1 && Math.ceil(scrollLeft) >= maxScroll - 2) {
+        scrollDirection.current = -1; // ชนขวา -> เด้งกลับซ้าย
+      } else if (scrollDirection.current === -1 && scrollLeft <= 2) {
+        scrollDirection.current = 1;  // ชนซ้าย -> เด้งกลับขวา
+      }
+
+      // สั่งเลื่อน
+      container.scrollLeft += (scrollDirection.current * speed);
+      
+      // อัปเดตปุ่มลูกศร
+      checkScroll();
+    }, intervalTime);
+
+    return () => clearInterval(autoScrollInterval);
+  }, [isMember, enteredTool]); // รันใหม่เมื่อเปลี่ยนหน้า View
+
+  // Resize Listener
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, []);
+
   /* ===============================
-     FEATURES DATA (ของเดิม)
+      FEATURES DATA
   ================================ */
   const features = [
     {
@@ -125,7 +181,7 @@ export default function StockFortuneTeller() {
   ];
 
   /* ==========================================================
-     CASE 1 : ยังไม่ซื้อ → PREVIEW VERSION
+      CASE 1 : ยังไม่ซื้อ → PREVIEW VERSION
   =========================================================== */
   if (!isMember) {
     return (
@@ -166,78 +222,81 @@ export default function StockFortuneTeller() {
             </div>
           </div>
 
-          {/* --- Features Section (ใช้แบบ Scroll เหมือน StockFortuneTeller) --- */}
-        <div className="w-full max-w-5xl mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
-            6 Main Features
-          </h2>
+          {/* --- Features Section --- */}
+          <div className="w-full max-w-5xl mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
+              6 Main Features
+            </h2>
 
-          <div className="relative group">
-            
-            {/* 1. ปุ่มซ้าย (ปรับระยะห่างเหมือนกัน) */}
-            <button 
-              onClick={() => scroll("left")}
-              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
-              aria-label="Scroll Left"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            {/* 2. Scroll Container */}
+            {/* [NEW] Wrapper for Pause on Hover */}
             <div 
-              ref={scrollContainerRef}
-              onScroll={checkScroll} 
-              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
-              style={scrollbarHideStyle}
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
             >
-              {features.map((item, index) => (
-                <div
-                  key={index}
-                  // ล็อคความกว้าง w-[350px] md:w-[400px] เหมือนต้นแบบ
-                  className="
-                      w-[350px] md:w-[400px] flex-shrink-0 snap-center
-                      group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
-                      hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300
-                  "
-                >
-                  <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">
-                    {item.title}
-                  </h3>
-                  {/* ไม่จำกัดบรรทัด (เอา line-clamp ออก) */}
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-              ))}
+              
+              {/* 1. ปุ่มซ้าย */}
+              <button 
+                onClick={() => scroll("left")}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
+                            w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                            hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                            hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                            flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                            active:scale-95
+                            ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+                aria-label="Scroll Left"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* 2. Scroll Container (Removed snap-x, scroll-smooth for Auto Scroll) */}
+              <div 
+                ref={scrollContainerRef}
+                onScroll={checkScroll} 
+                className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
+                style={scrollbarHideStyle}
+              >
+                {features.map((item, index) => (
+                  <div
+                    key={index}
+                    className="
+                        w-[350px] md:w-[400px] flex-shrink-0 snap-center
+                        group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
+                        hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300
+                    "
+                  >
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* 3. ปุ่มขวา */}
+              <button 
+                onClick={() => scroll("right")}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
+                            w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                            hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                            hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                            flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                            active:scale-95
+                            ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+                aria-label="Scroll Right"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
             </div>
-
-            {/* 3. ปุ่มขวา (ปรับระยะห่างเหมือนกัน) */}
-            <button 
-              onClick={() => scroll("right")}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
-              aria-label="Scroll Right"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
           </div>
-        </div>
 
           <div className="flex gap-4">
             <button
@@ -260,10 +319,10 @@ export default function StockFortuneTeller() {
   }
 
   /* ==========================================================
-     CASE 2 : ซื้อแล้ว แต่ยังไม่กด Start
+      CASE 2 : ซื้อแล้ว แต่ยังไม่กด Start
   =========================================================== */
   if (isMember && !enteredTool) {
-     return (
+    return (
       <div className="relative w-full min-h-screen text-white overflow-hidden animate-fade-in pb-20">
 
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
@@ -306,71 +365,74 @@ export default function StockFortuneTeller() {
               6 Main Features
             </h2>
 
-            <div className="relative group">
-            
-            {/* 1. ปุ่มซ้าย (ปรับระยะห่างเหมือนกัน) */}
-            <button 
-              onClick={() => scroll("left")}
-              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
-              aria-label="Scroll Left"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            {/* 2. Scroll Container */}
+            {/* [NEW] Wrapper for Pause on Hover */}
             <div 
-              ref={scrollContainerRef}
-              onScroll={checkScroll} 
-              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
-              style={scrollbarHideStyle}
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
             >
-              {features.map((item, index) => (
-                <div
-                  key={index}
-                  // ล็อคความกว้าง w-[350px] md:w-[400px] เหมือนต้นแบบ
-                  className="
-                      w-[350px] md:w-[400px] flex-shrink-0 snap-center
-                      group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
-                      hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300
-                  "
-                >
-                  <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">
-                    {item.title}
-                  </h3>
-                  {/* ไม่จำกัดบรรทัด (เอา line-clamp ออก) */}
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    {item.desc}
-                  </p>
-                </div>
-              ))}
+              
+              {/* 1. ปุ่มซ้าย */}
+              <button 
+                onClick={() => scroll("left")}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
+                            w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                            hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                            hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                            flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                            active:scale-95
+                            ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+                aria-label="Scroll Left"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* 2. Scroll Container (Removed snap-x, scroll-smooth for Auto Scroll) */}
+              <div 
+                ref={scrollContainerRef}
+                onScroll={checkScroll} 
+                className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
+                style={scrollbarHideStyle}
+              >
+                {features.map((item, index) => (
+                  <div
+                    key={index}
+                    className="
+                        w-[350px] md:w-[400px] flex-shrink-0 snap-center
+                        group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
+                        hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300
+                    "
+                  >
+                    <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* 3. ปุ่มขวา */}
+              <button 
+                onClick={() => scroll("right")}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
+                            w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                            hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                            hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                            flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                            active:scale-95
+                            ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+                aria-label="Scroll Right"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
             </div>
-
-            {/* 3. ปุ่มขวา (ปรับระยะห่างเหมือนกัน) */}
-            <button 
-              onClick={() => scroll("right")}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
-              aria-label="Scroll Right"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-
-          </div>
           </div>
 
           <div className="flex gap-4">
@@ -393,43 +455,13 @@ export default function StockFortuneTeller() {
   }
 
   /* ==========================================================
-     CASE 3 : เข้า Full Dashboard แล้ว
+      CASE 3 : เข้า Full Dashboard แล้ว
   =========================================================== */
-  function ChartCard({ title, type, onChange }) {
-    return (
-      <div className="bg-[#111827] rounded-xl border border-slate-700 p-4 h-[320px]">
-        
-        {/* Header */}
-        <div className="mb-3 flex justify-between items-center">
-          <select
-            value={type}
-            onChange={(e) => onChange(e.target.value)}
-            className="bg-[#1f2937] text-xs border border-slate-600 rounded-md px-2 py-1 focus:outline-none focus:border-cyan-500"
-          >
-            <option>Last</option>
-            <option>%Short</option>
-            <option>PredictTrend</option>
-            <option>Peak</option>
-            <option>Shareholder</option>
-            <option>Manager</option>
-          </select>
-
-          <span className="text-xs text-slate-400">{title}</span>
-        </div>
-
-        {/* Chart Area */}
-        <div className="w-full h-[250px] bg-[#0f172a] rounded-lg p-4 relative overflow-hidden">
-          <ChartRenderer type={type} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="w-full min-h-screen bg-[#0B1221] text-white px-6 py-6">
 
-      <div className="flex items-center justify-between mb-6">
-        <div className="relative w-72">
+        <div className="flex items-center justify-between mb-6">
+          <div className="relative w-72">
             <input
               type="text"
               value={symbol}
@@ -454,8 +486,8 @@ export default function StockFortuneTeller() {
                       key={index}
                       onClick={() => {
                         setSymbol(item);
-                          setShowDropdown(false);
-                        }}
+                        setShowDropdown(false);
+                      }}
                       className="px-4 py-2 text-sm hover:bg-cyan-500 hover:text-white cursor-pointer transition"
                     >
                       {item}
@@ -465,7 +497,7 @@ export default function StockFortuneTeller() {
                   <div className="px-4 py-2 text-sm text-slate-400">
                     No results
                   </div>
-              )}
+                )}
               </div>
             )}
           </div>
@@ -478,47 +510,79 @@ export default function StockFortuneTeller() {
               ⟳
             </button>
             <button className="bg-[#111827] border border-slate-700 px-3 py-2 rounded-lg hover:border-cyan-500">
-                ⬇
+              ⬇
             </button>
           </div>
         </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-              <p className="text-slate-400 text-xs">LAST PRICE</p>
-                <p className="text-green-400 text-lg font-bold">5.30 (+1.92%)</p>
-            </div>
-
-            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-              <p className="text-slate-400 text-xs">VOLUME</p>
-              <p className="text-yellow-400 text-lg font-bold">62.8M</p>
-            </div>
-
-            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-              <p className="text-slate-400 text-xs">HIGH / LOW</p>
-              <p className="text-white text-lg font-bold">5.35 / 5.15</p>
-            </div>
-
-            <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
-              <p className="text-slate-400 text-xs">MARKET STATUS</p>
-                <p className="text-green-400 font-bold">● OPEN</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+            <p className="text-slate-400 text-xs">LAST PRICE</p>
+            <p className="text-green-400 text-lg font-bold">5.30 (+1.92%)</p>
           </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(filters).map(([key, value]) => (
-                <ChartCard
-                  key={key}
-                  title={key}
-                  type={value}
-                  onChange={(newValue) =>
-                  setFilters({
-                    ...filters,
-                    [key]: newValue,
+          <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+            <p className="text-slate-400 text-xs">VOLUME</p>
+            <p className="text-yellow-400 text-lg font-bold">62.8M</p>
+          </div>
+
+          <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+            <p className="text-slate-400 text-xs">HIGH / LOW</p>
+            <p className="text-white text-lg font-bold">5.35 / 5.15</p>
+          </div>
+
+          <div className="bg-[#111827] p-4 rounded-xl border border-slate-700">
+            <p className="text-slate-400 text-xs">MARKET STATUS</p>
+            <p className="text-green-400 font-bold">● OPEN</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Object.entries(filters).map(([key, value]) => (
+            <ChartCard
+              key={key}
+              title={key}
+              type={value}
+              onChange={(newValue) =>
+                setFilters({
+                  ...filters,
+                  [key]: newValue,
                 })
               }
             />
           ))}
+        </div>
+    </div>
+  );
+}
+
+// --- Helper Components ---
+
+function ChartCard({ title, type, onChange }) {
+  return (
+    <div className="bg-[#111827] rounded-xl border border-slate-700 p-4 h-[320px]">
+      
+      {/* Header */}
+      <div className="mb-3 flex justify-between items-center">
+        <select
+          value={type}
+          onChange={(e) => onChange(e.target.value)}
+          className="bg-[#1f2937] text-xs border border-slate-600 rounded-md px-2 py-1 focus:outline-none focus:border-cyan-500"
+        >
+          <option>Last</option>
+          <option>%Short</option>
+          <option>PredictTrend</option>
+          <option>Peak</option>
+          <option>Shareholder</option>
+          <option>Manager</option>
+        </select>
+
+        <span className="text-xs text-slate-400">{title}</span>
+      </div>
+
+      {/* Chart Area */}
+      <div className="w-full h-[250px] bg-[#0f172a] rounded-lg p-4 relative overflow-hidden">
+        <ChartRenderer type={type} />
       </div>
     </div>
   );
@@ -649,8 +713,8 @@ function ChartRenderer({ type }) {
 
             <path
               d={`${buildPath(rawData["Last"])} 
-                 L ${width - paddingRight},${height - paddingBottom} 
-                 L ${paddingLeft},${height - paddingBottom} Z`}
+                  L ${width - paddingRight},${height - paddingBottom} 
+                  L ${paddingLeft},${height - paddingBottom} Z`}
               fill="url(#area)"
             />
 
@@ -685,8 +749,8 @@ function ChartRenderer({ type }) {
 
             <path
               d={`${buildPath(rawData["Peak"])} 
-                 L ${width - paddingRight},${height - paddingBottom} 
-                 L ${paddingLeft},${height - paddingBottom} Z`}
+                  L ${width - paddingRight},${height - paddingBottom} 
+                  L ${paddingLeft},${height - paddingBottom} Z`}
               fill="url(#area2)"
             />
 

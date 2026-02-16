@@ -1,3 +1,4 @@
+// src/pages/tools/RubberThai.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -19,6 +20,10 @@ export default function RubberThai() {
 
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
+
+  // --- [NEW] Refs สำหรับระบบเลื่อนอัตโนมัติ ---
+  const scrollDirection = useRef(1); // 1 = ขวา, -1 = ซ้าย
+  const isPaused = useRef(false);    // เก็บสถานะว่าเมาส์ชี้อยู่ไหม
 
   /* ================= MEMBER CHECK ================= */
   useEffect(() => {
@@ -42,7 +47,7 @@ export default function RubberThai() {
     }
   }, []);
 
-  /* ================= SCROLL ================= */
+  /* ================= SCROLL LOGIC (Manual + Auto) ================= */
   const checkScroll = () => {
     if (!scrollContainerRef.current) return;
 
@@ -58,14 +63,61 @@ export default function RubberThai() {
   const scroll = (direction) => {
     if (!scrollContainerRef.current) return;
 
-    scrollContainerRef.current.scrollBy({
-      left: direction === "left" ? -350 : 350,
-      behavior: "smooth",
-    });
+    // [NEW] หยุด Auto ชั่วคราวเมื่อกดปุ่ม
+    isPaused.current = true;
+
+    const { current } = scrollContainerRef;
+    const scrollAmount = 350;
+
+    if (direction === "left") {
+        current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+        scrollDirection.current = -1; // อัปเดตทิศทาง Auto เป็นซ้าย
+    } else {
+        current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        scrollDirection.current = 1;  // อัปเดตทิศทาง Auto เป็นขวา
+    }
 
     setTimeout(checkScroll, 300);
+    
+    // [NEW] ให้ Auto ทำงานต่อหลังจากกดปุ่มไปสักพัก (0.5 วิ)
+    setTimeout(() => { isPaused.current = false }, 500);
   };
 
+  // [NEW] Auto Scroll Effect
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    
+    // ถ้าหา container ไม่เจอ (เช่น อยู่หน้า Dashboard) ให้จบ
+    if (!container) return;
+
+    const speed = 1;         // ความเร็ว (pixel)
+    const intervalTime = 15; // ความถี่ (ms)
+
+    const autoScrollInterval = setInterval(() => {
+      // ถ้าเมาส์ชี้อยู่ (Pause) หรือ Container หายไป ให้ข้ามรอบนี้
+      if (isPaused.current || !container) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // ตรวจสอบการชนขอบ เพื่อกลับทิศ
+      if (scrollDirection.current === 1 && Math.ceil(scrollLeft) >= maxScroll - 2) {
+        scrollDirection.current = -1; // ชนขวา -> เด้งกลับซ้าย
+      } else if (scrollDirection.current === -1 && scrollLeft <= 2) {
+        scrollDirection.current = 1;  // ชนซ้าย -> เด้งกลับขวา
+      }
+
+      // สั่งเลื่อน
+      container.scrollLeft += (scrollDirection.current * speed);
+      
+      // อัปเดตปุ่มลูกศร
+      checkScroll();
+    }, intervalTime);
+
+    return () => clearInterval(autoScrollInterval);
+  }, [isMember, enteredTool]); // รันใหม่เมื่อเปลี่ยนหน้า View
+
+  // Resize Listener
   useEffect(() => {
     checkScroll();
     window.addEventListener("resize", checkScroll);
@@ -92,7 +144,7 @@ export default function RubberThai() {
   ];
 
   /* ==========================================================
-     CASE 1 : PREVIEW
+      CASE 1 : PREVIEW
   =========================================================== */
   if (!isMember) {
      return (
@@ -145,24 +197,29 @@ export default function RubberThai() {
           </div>
         </div>
 
-        {/* --- Features Section (เปลี่ยนเป็น Scroll) --- */}
+        {/* --- Features Section (Scroll Layout) --- */}
         <div className="w-full max-w-5xl mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
             4 Main Features
           </h2>
 
-          <div className="relative group">
+          {/* [NEW] Wrapper for Pause on Hover */}
+          <div 
+            className="relative group"
+            onMouseEnter={() => isPaused.current = true}
+            onMouseLeave={() => isPaused.current = false}
+          >
             
             {/* 1. ปุ่มซ้าย */}
             <button 
               onClick={() => scroll("left")}
               className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
               aria-label="Scroll Left"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,17 +227,16 @@ export default function RubberThai() {
               </svg>
             </button>
 
-            {/* 2. Scroll Container */}
+            {/* 2. Scroll Container (Removed snap-x, scroll-smooth for Auto Scroll) */}
             <div 
               ref={scrollContainerRef}
               onScroll={checkScroll} 
-              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+              className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
               style={scrollbarHideStyle}
             >
               {features.map((item, index) => (
                 <div
                   key={index}
-                  // ล็อคความกว้างเหมือน StockFortuneTeller
                   className="
                       w-[350px] md:w-[400px] flex-shrink-0 snap-center
                       group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
@@ -201,12 +257,12 @@ export default function RubberThai() {
             <button 
               onClick={() => scroll("right")}
               className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
               aria-label="Scroll Right"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,33 +275,21 @@ export default function RubberThai() {
 
         {/* --- CTA Buttons --- */}
         <div className="text-center w-full max-w-md mx-auto mt-4">
-          {isMember ? (
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full md:w-auto px-8 py-3 rounded-full bg-slate-800 text-white font-semibold border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300"
+            >
+              Sign In
+            </button>
+
             <button
               onClick={() => navigate("/member-register")}
-              className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
+              className="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
             >
-              <span className="mr-2">Start Using Tool</span>
-              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              Join Membership
             </button>
-          ) : (
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-              <button
-                onClick={() => navigate("/login")}
-                className="w-full md:w-auto px-8 py-3 rounded-full bg-slate-800 text-white font-semibold border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300"
-              >
-                Sign In
-              </button>
-
-              <button
-                onClick={() => navigate("/member-register")}
-                className="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
-              >
-                Join Membership
-              </button>
-            </div>
-          )}
+          </div>
         </div>
 
       </div>
@@ -254,7 +298,7 @@ export default function RubberThai() {
   }
 
   /* ==========================================================
-     CASE 2 : START SCREEN
+      CASE 2 : START SCREEN
   =========================================================== */
   if (isMember && !enteredTool) {
      return (
@@ -307,24 +351,29 @@ export default function RubberThai() {
           </div>
         </div>
 
-        {/* --- Features Section (เปลี่ยนเป็น Scroll) --- */}
+        {/* --- Features Section (Scroll Layout) --- */}
         <div className="w-full max-w-5xl mb-12">
           <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
             4 Main Features
           </h2>
 
-          <div className="relative group">
+          {/* [NEW] Wrapper for Pause on Hover */}
+          <div 
+            className="relative group"
+            onMouseEnter={() => isPaused.current = true}
+            onMouseLeave={() => isPaused.current = false}
+          >
             
             {/* 1. ปุ่มซ้าย */}
             <button 
               onClick={() => scroll("left")}
               className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
               aria-label="Scroll Left"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,17 +381,16 @@ export default function RubberThai() {
               </svg>
             </button>
 
-            {/* 2. Scroll Container */}
+            {/* 2. Scroll Container (Removed snap-x, scroll-smooth for Auto Scroll) */}
             <div 
               ref={scrollContainerRef}
               onScroll={checkScroll} 
-              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+              className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
               style={scrollbarHideStyle}
             >
               {features.map((item, index) => (
                 <div
                   key={index}
-                  // ล็อคความกว้างเหมือน StockFortuneTeller
                   className="
                       w-[350px] md:w-[400px] flex-shrink-0 snap-center
                       group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
@@ -363,12 +411,12 @@ export default function RubberThai() {
             <button 
               onClick={() => scroll("right")}
               className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
-                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
-                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
-                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
-                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
-                         active:scale-95
-                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+                          w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                          hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                          hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                          flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                          active:scale-95
+                          ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
               aria-label="Scroll Right"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -380,183 +428,183 @@ export default function RubberThai() {
         </div>
 
         {/* --- CTA Buttons --- */}
-       <div className="flex gap-4">
-            <button
-              onClick={() => {
-                setEnteredTool(true);
-                localStorage.setItem("rubberToolEntered", "true"); // 🔥 จำสถานะ
-              }}
-              className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
-            >
-              <span className="mr-2">Start Using Tool</span>
-              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
-          </div>
+        <div className="text-center w-full max-w-md mx-auto mt-4">
+          <button
+            onClick={() => {
+              setEnteredTool(true);
+              localStorage.setItem("rubberToolEntered", "true"); // 🔥 จำสถานะ
+            }}
+            className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
+          >
+            <span className="mr-2">Start Using Tool</span>
+            <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </div>
 
       </div>
     </div>
   );
   }
 
-/* ==========================================================
-   CASE 3 : FULL DASHBOARD (Rubber Thai - Production UI)
-========================================================== */
+  /* ==========================================================
+      CASE 3 : FULL DASHBOARD (Rubber Thai - Production UI)
+  ========================================================== */
 
-const metrics = [
-  { title: "RSS3 (BKK)", value: 78.50, change: 1.2 },
-  { title: "TSR20 (SGX)", value: 162.4, change: -0.5 },
-  { title: "CUP LUMP", value: 45.20, change: 0.5 },
-  { title: "EXCHANGE RATE", value: 35.85, change: 0.0 },
-];
+  const metrics = [
+    { title: "RSS3 (BKK)", value: 78.50, change: 1.2 },
+    { title: "TSR20 (SGX)", value: 162.4, change: -0.5 },
+    { title: "CUP LUMP", value: 45.20, change: 0.5 },
+    { title: "EXCHANGE RATE", value: 35.85, change: 0.0 },
+  ];
 
-return (
-  <div className="w-full min-h-screen bg-[#0b111a] text-white px-6 py-6">
-    <div className="max-w-[1500px] mx-auto">
+  return (
+    <div className="w-full min-h-screen bg-[#0b111a] text-white px-6 py-6">
+      <div className="max-w-[1500px] mx-auto">
 
-      {/* ================= TOP SEARCH BAR ================= */}
-      <div className="flex items-center justify-between mb-6">
+        {/* ================= TOP SEARCH BAR ================= */}
+        <div className="flex items-center justify-between mb-6">
 
-        {/* Left */}
-        <div className="flex items-center gap-4">
+          {/* Left */}
+          <div className="flex items-center gap-4">
 
-          {/* Back */}
-          <button
-            onClick={() => navigate(-1)}
-            className="text-slate-400 hover:text-white transition"
-          >
-            ←
-          </button>
+            {/* Back */}
+            <button
+              onClick={() => navigate(-1)}
+              className="text-slate-400 hover:text-white transition"
+            >
+              ←
+            </button>
 
-          {/* Search Pill */}
-          <div className="flex items-center bg-[#111827] border border-slate-700 px-4 py-2 rounded-full w-[250px]">
-            <span className="text-slate-400 text-sm">🔍</span>
-            <input
-              type="text"
-              defaultValue="24CS"
-              className="bg-transparent outline-none text-sm ml-2 w-full text-slate-300"
-            />
-            <span className="text-slate-500 cursor-pointer">✕</span>
-          </div>
-        </div>
-
-        {/* Toggle */}
-        <div
-          onClick={() => setDarkMode(!darkMode)}
-          className="w-10 h-5 bg-yellow-400 rounded-full relative cursor-pointer"
-        >
-          <div className="w-4 h-4 bg-black rounded-full absolute top-0.5 right-0.5"></div>
-        </div>
-      </div>
-
-      {/* ================= METRIC STRIP ================= */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {metrics.map((m) => (
-          <div
-            key={m.title}
-            className="bg-[#111827] border border-slate-700 rounded-lg p-4"
-          >
-            <p className="text-xs text-slate-400">{m.title}</p>
-
-            <div className="flex justify-between mt-2">
-              <p className="text-sm font-semibold">{m.value}</p>
-              <p
-                className={`text-xs ${
-                  m.change > 0
-                    ? "text-green-400"
-                    : m.change < 0
-                    ? "text-red-400"
-                    : "text-slate-400"
-                }`}
-              >
-                {m.change > 0 ? "+" : ""}
-                {m.change}
-              </p>
+            {/* Search Pill */}
+            <div className="flex items-center bg-[#111827] border border-slate-700 px-4 py-2 rounded-full w-[250px]">
+              <span className="text-slate-400 text-sm">🔍</span>
+              <input
+                type="text"
+                defaultValue="24CS"
+                className="bg-transparent outline-none text-sm ml-2 w-full text-slate-300"
+              />
+              <span className="text-slate-500 cursor-pointer">✕</span>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* ================= CHART SECTION ================= */}
-
-      {/* TOP LARGE CHART */}
-      <div className="bg-[#111827] border border-slate-700 rounded-xl p-6 mb-6">
-
-        <p className="text-xs text-slate-400 mb-4">
-          CLOSE (24CS)
-        </p>
-
-        <div className="relative w-full h-[350px] bg-[#0f172a] rounded-lg overflow-hidden">
-
-          {/* Grid */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-
-          <svg viewBox="0 0 100 40" className="absolute inset-0 w-full h-full">
-
-            <defs>
-              <linearGradient id="greenArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4"/>
-                <stop offset="100%" stopColor="#22c55e" stopOpacity="0"/>
-              </linearGradient>
-            </defs>
-
-            <path
-              d="M0 28 Q15 20 25 30 T45 18 T60 25 T80 15 T100 20"
-              fill="none"
-              stroke="#22c55e"
-              strokeWidth="1.5"
-              className="drop-shadow-[0_0_8px_#22c55e]"
-            />
-
-            <path
-              d="M0 28 Q15 20 25 30 T45 18 T60 25 T80 15 T100 20 V40 H0 Z"
-              fill="url(#greenArea)"
-            />
-          </svg>
-
+          {/* Toggle */}
+          <div
+            onClick={() => setDarkMode(!darkMode)}
+            className="w-10 h-5 bg-yellow-400 rounded-full relative cursor-pointer"
+          >
+            <div className="w-4 h-4 bg-black rounded-full absolute top-0.5 right-0.5"></div>
+          </div>
         </div>
-      </div>
 
-      {/* BOTTOM CHART */}
-      <div className="bg-[#111827] border border-slate-700 rounded-xl p-6">
+        {/* ================= METRIC STRIP ================= */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {metrics.map((m) => (
+            <div
+              key={m.title}
+              className="bg-[#111827] border border-slate-700 rounded-lg p-4"
+            >
+              <p className="text-xs text-slate-400">{m.title}</p>
 
-        <p className="text-xs text-slate-400 mb-4">
-          Rubber Thai Price
-        </p>
-
-        <div className="relative w-full h-[300px] bg-[#0f172a] rounded-lg overflow-hidden">
-
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-
-          <svg viewBox="0 0 100 40" className="absolute inset-0 w-full h-full">
-
-            <defs>
-              <linearGradient id="yellowArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#facc15" stopOpacity="0.4"/>
-                <stop offset="100%" stopColor="#facc15" stopOpacity="0"/>
-              </linearGradient>
-            </defs>
-
-            <path
-              d="M0 30 Q20 28 35 18 T55 26 T75 20 T100 29"
-              fill="none"
-              stroke="#facc15"
-              strokeWidth="1.5"
-            />
-
-            <path
-              d="M0 30 Q20 28 35 18 T55 26 T75 20 T100 29 V40 H0 Z"
-              fill="url(#yellowArea)"
-            />
-          </svg>
-
+              <div className="flex justify-between mt-2">
+                <p className="text-sm font-semibold">{m.value}</p>
+                <p
+                  className={`text-xs ${
+                    m.change > 0
+                      ? "text-green-400"
+                      : m.change < 0
+                      ? "text-red-400"
+                      : "text-slate-400"
+                  }`}
+                >
+                  {m.change > 0 ? "+" : ""}
+                  {m.change}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
 
+        {/* ================= CHART SECTION ================= */}
+
+        {/* TOP LARGE CHART */}
+        <div className="bg-[#111827] border border-slate-700 rounded-xl p-6 mb-6">
+
+          <p className="text-xs text-slate-400 mb-4">
+            CLOSE (24CS)
+          </p>
+
+          <div className="relative w-full h-[350px] bg-[#0f172a] rounded-lg overflow-hidden">
+
+            {/* Grid */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+            <svg viewBox="0 0 100 40" className="absolute inset-0 w-full h-full">
+
+              <defs>
+                <linearGradient id="greenArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+
+              <path
+                d="M0 28 Q15 20 25 30 T45 18 T60 25 T80 15 T100 20"
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="1.5"
+                className="drop-shadow-[0_0_8px_#22c55e]"
+              />
+
+              <path
+                d="M0 28 Q15 20 25 30 T45 18 T60 25 T80 15 T100 20 V40 H0 Z"
+                fill="url(#greenArea)"
+              />
+            </svg>
+
+          </div>
+        </div>
+
+        {/* BOTTOM CHART */}
+        <div className="bg-[#111827] border border-slate-700 rounded-xl p-6">
+
+          <p className="text-xs text-slate-400 mb-4">
+            Rubber Thai Price
+          </p>
+
+          <div className="relative w-full h-[300px] bg-[#0f172a] rounded-lg overflow-hidden">
+
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+
+            <svg viewBox="0 0 100 40" className="absolute inset-0 w-full h-full">
+
+              <defs>
+                <linearGradient id="yellowArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#facc15" stopOpacity="0.4"/>
+                  <stop offset="100%" stopColor="#facc15" stopOpacity="0"/>
+                </linearGradient>
+              </defs>
+
+              <path
+                d="M0 30 Q20 28 35 18 T55 26 T75 20 T100 29"
+                fill="none"
+                stroke="#facc15"
+                strokeWidth="1.5"
+              />
+
+              <path
+                d="M0 30 Q20 28 35 18 T55 26 T75 20 T100 29 V40 H0 Z"
+                fill="url(#yellowArea)"
+              />
+            </svg>
+
+          </div>
+        </div>
+
+      </div>
     </div>
-  </div>
-);
+  );
 }
 
 /* ==========================================================

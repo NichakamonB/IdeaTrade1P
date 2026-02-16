@@ -1,3 +1,4 @@
+// src/pages/tools/Gold.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +17,10 @@ export default function Gold() {
   const scrollContainerRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
+
+  // --- [NEW] Refs สำหรับระบบเลื่อนอัตโนมัติ ---
+  const scrollDirection = useRef(1); // 1 = ขวา, -1 = ซ้าย
+  const isPaused = useRef(false);    // เก็บสถานะว่าเมาส์ชี้อยู่ไหม
 
   /* ================= MEMBER CHECK ================= */
   useEffect(() => {
@@ -37,13 +42,9 @@ export default function Gold() {
     } catch (error) {
       console.error("Error checking member status:", error);
     }
-
-    checkScroll();
-    window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
   }, []);
 
-  /* ================= SCROLL ================= */
+  /* ================= SCROLL LOGIC (Manual + Auto) ================= */
   const checkScroll = () => {
     if (!scrollContainerRef.current) return;
 
@@ -59,13 +60,66 @@ export default function Gold() {
   const scroll = (direction) => {
     if (!scrollContainerRef.current) return;
 
-    scrollContainerRef.current.scrollBy({
-      left: direction === "left" ? -350 : 350,
-      behavior: "smooth",
-    });
+    // [NEW] หยุด Auto ชั่วคราวเมื่อกดปุ่ม
+    isPaused.current = true;
+
+    const { current } = scrollContainerRef;
+    const scrollAmount = 350;
+
+    if (direction === "left") {
+        current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+        scrollDirection.current = -1; // อัปเดตทิศทาง Auto เป็นซ้าย
+    } else {
+        current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        scrollDirection.current = 1;  // อัปเดตทิศทาง Auto เป็นขวา
+    }
 
     setTimeout(checkScroll, 300);
+    
+    // [NEW] ให้ Auto ทำงานต่อหลังจากกดปุ่มไปสักพัก (0.5 วิ)
+    setTimeout(() => { isPaused.current = false }, 500);
   };
+
+  // [NEW] Auto Scroll Effect
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    
+    // ถ้าหา container ไม่เจอ (เช่น อยู่หน้า Dashboard) ให้จบ
+    if (!container) return;
+
+    const speed = 1;         // ความเร็ว (pixel)
+    const intervalTime = 15; // ความถี่ (ms)
+
+    const autoScrollInterval = setInterval(() => {
+      // ถ้าเมาส์ชี้อยู่ (Pause) หรือ Container หายไป ให้ข้ามรอบนี้
+      if (isPaused.current || !container) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // ตรวจสอบการชนขอบ เพื่อกลับทิศ
+      if (scrollDirection.current === 1 && Math.ceil(scrollLeft) >= maxScroll - 2) {
+        scrollDirection.current = -1; // ชนขวา -> เด้งกลับซ้าย
+      } else if (scrollDirection.current === -1 && scrollLeft <= 2) {
+        scrollDirection.current = 1;  // ชนซ้าย -> เด้งกลับขวา
+      }
+
+      // สั่งเลื่อน
+      container.scrollLeft += (scrollDirection.current * speed);
+      
+      // อัปเดตปุ่มลูกศร
+      checkScroll();
+    }, intervalTime);
+
+    return () => clearInterval(autoScrollInterval);
+  }, [isMember, enteredTool]); // รันใหม่เมื่อเปลี่ยนหน้า View
+
+  // Resize Listener
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, []);
 
   const features = [
     {
@@ -146,7 +200,12 @@ export default function Gold() {
               4 Main Features
             </h2>
 
-            <div className="relative group">
+            {/* [NEW] Wrapper for Pause on Hover */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
+            >
               
               {/* 1. ปุ่มซ้าย */}
               <button 
@@ -165,11 +224,11 @@ export default function Gold() {
                 </svg>
               </button>
 
-              {/* 2. Scroll Container */}
+              {/* 2. Scroll Container (Removed snap-x, scroll-smooth for Auto Scroll) */}
               <div 
                 ref={scrollContainerRef}
                 onScroll={checkScroll} 
-                className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+                className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
                 style={scrollbarHideStyle}
               >
                 {features.map((item, index) => (
@@ -213,33 +272,21 @@ export default function Gold() {
 
           {/* --- CTA Buttons --- */}
           <div className="text-center w-full max-w-md mx-auto mt-4">
-            {isMember ? (
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4">
+              <button
+                onClick={() => navigate("/login")}
+                className="w-full md:w-auto px-8 py-3 rounded-full bg-slate-800 text-white font-semibold border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300"
+              >
+                Sign In
+              </button>
+
               <button
                 onClick={() => navigate("/member-register")}
-                className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
+                className="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
               >
-                <span className="mr-2">Start Using Tool</span>
-                <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                Join Membership
               </button>
-            ) : (
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-                <button
-                  onClick={() => navigate("/login")}
-                  className="w-full md:w-auto px-8 py-3 rounded-full bg-slate-800 text-white font-semibold border border-slate-600 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300"
-                >
-                  Sign In
-                </button>
-
-                <button
-                  onClick={() => navigate("/member-register")}
-                  className="w-full md:w-auto px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:brightness-110 shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
-                >
-                  Join Membership
-                </button>
-              </div>
-            )}
+            </div>
           </div>
 
         </div>
@@ -307,7 +354,12 @@ export default function Gold() {
               4 Main Features
             </h2>
 
-            <div className="relative group">
+            {/* [NEW] Wrapper for Pause on Hover */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
+            >
               
               {/* 1. ปุ่มซ้าย */}
               <button 
@@ -330,7 +382,7 @@ export default function Gold() {
               <div 
                 ref={scrollContainerRef}
                 onScroll={checkScroll} 
-                className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+                className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar"
                 style={scrollbarHideStyle}
               >
                 {features.map((item, index) => (

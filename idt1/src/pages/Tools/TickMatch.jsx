@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Style ซ่อน Scrollbar (เหมือนต้นแบบ DR 100%)
+// Style ซ่อน Scrollbar
 const scrollbarHideStyle = {
   msOverflowStyle: "none",
   scrollbarWidth: "none",
@@ -12,20 +12,20 @@ export default function TickMatch() {
   const navigate = useNavigate();
   const scrollContainerRef = useRef(null);
 
-  // States (เหมือน DR 100%)
+  // States
   const [isMember, setIsMember] = useState(false);
   const [enteredTool, setEnteredTool] = useState(false);
 
-  // Scroll Button States (เหมือน DR 100%)
+  // Scroll Button States
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
 
-  // Filter States (Dashboard TickMatch - Mock Data)
-  // (DR มี usaFilter/asiaFilter แต่ TickMatch เป็น Split View เดี๋ยวเราใช้ Mock Data แทน)
+  // --- [NEW] Refs สำหรับระบบเลื่อนอัตโนมัติ ---
+  const scrollDirection = useRef(1); // 1 = ขวา, -1 = ซ้าย
+  const isPaused = useRef(false);    // เก็บสถานะว่าเมาส์ชี้อยู่ไหม
 
   /* ===============================
-      1. MEMBER CHECK & LOGIC (เหมือน DR 100%)
-      - Logic: อ่าน session แต่เขียน local ทำให้รีหน้าทุกครั้งที่เข้าใหม่
+      1. MEMBER CHECK & LOGIC
   ================================ */
   useEffect(() => {
     try {
@@ -33,11 +33,11 @@ export default function TickMatch() {
       if (userProfile) {
         const user = JSON.parse(userProfile);
 
-        // เช็คสิทธิ์ 'tickmatch' (เปลี่ยนแค่ชื่อสิทธิ์)
+        // เช็คสิทธิ์ 'tickmatch'
         if (user.unlockedItems && user.unlockedItems.includes("tickmatch")) {
           setIsMember(true);
 
-          // เช็คว่าเคยเข้า tool แล้วหรือยัง (อ่านจาก sessionStorage เหมือน DR)
+          // เช็คว่าเคยเข้า tool แล้วหรือยัง
           const hasEntered = sessionStorage.getItem("tickToolEntered");
           if (hasEntered === "true") {
             setEnteredTool(true);
@@ -50,35 +50,77 @@ export default function TickMatch() {
   }, []);
 
   /* ===============================
-      2. SCROLL LOGIC (เหมือน DR 100%)
+      2. SCROLL LOGIC (Manual + Auto)
   ================================ */
   const checkScroll = () => {
     if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = 
-      scrollContainerRef.current;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setShowLeft(scrollLeft > 1);
-      const isEnd = 
-      Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2;
+      const isEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth - 2;
       setShowRight(!isEnd);
     }
   };
 
+  // ฟังก์ชันกดปุ่มเลื่อน (Manual)
   const scroll = (direction) => {
     if (scrollContainerRef.current) {
+      // หยุด Auto ชั่วคราวเมื่อกดปุ่ม
+      isPaused.current = true;
+
       const { current } = scrollContainerRef;
       const scrollAmount = 350;
+      
       if (direction === "left") {
         current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+        scrollDirection.current = -1; // อัปเดตทิศทาง Auto เป็นซ้าย
       } else {
         current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+        scrollDirection.current = 1;  // อัปเดตทิศทาง Auto เป็นขวา
       }
+      
       setTimeout(checkScroll, 300);
+      
+      // ให้ Auto ทำงานต่อหลังจากกดปุ่มไปสักพัก (0.5 วิ)
+      setTimeout(() => { isPaused.current = false }, 500);
     }
   };
-  
-  // เพิ่ม useEffect สำหรับ scroll event listener (เพื่อให้ scroll logic ทำงานสมบูรณ์แบบ DR)
+
+  // [NEW] ฟังก์ชันเลื่อนอัตโนมัติ (Auto Scroll Effect)
   useEffect(() => {
+    const container = scrollContainerRef.current;
+    
+    // ถ้าหา container ไม่เจอ (เช่น อยู่หน้า Dashboard) ให้จบ
+    if (!container) return;
+
+    const speed = 1;         // ความเร็ว (pixel)
+    const intervalTime = 15; // ความถี่ (ms)
+
+    const autoScrollInterval = setInterval(() => {
+      // ถ้าเมาส์ชี้อยู่ (Pause) หรือ Container หายไป ให้ข้ามรอบนี้
+      if (isPaused.current || !container) return;
+
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const maxScroll = scrollWidth - clientWidth;
+
+      // ตรวจสอบการชนขอบ เพื่อกลับทิศ
+      if (scrollDirection.current === 1 && Math.ceil(scrollLeft) >= maxScroll - 2) {
+        scrollDirection.current = -1; // ชนขวา -> เด้งกลับซ้าย
+      } else if (scrollDirection.current === -1 && scrollLeft <= 2) {
+        scrollDirection.current = 1;  // ชนซ้าย -> เด้งกลับขวา
+      }
+
+      // สั่งเลื่อน
+      container.scrollLeft += (scrollDirection.current * speed);
+      
+      // อัปเดตปุ่มลูกศร
       checkScroll();
+    }, intervalTime);
+
+    return () => clearInterval(autoScrollInterval);
+  }, [isMember, enteredTool]); // รันใหม่เมื่อเปลี่ยนหน้า View
+
+  // Resize listener
+  useEffect(() => {
       window.addEventListener('resize', checkScroll);
       return () => window.removeEventListener('resize', checkScroll);
   }, []);
@@ -93,7 +135,7 @@ export default function TickMatch() {
     { title: "Price-Based Distribution", desc: "Identifies price levels where the heaviest trading volume has occurred." },
   ];
 
-  // Mock Data สำหรับ Dashboard (Split View)
+  // Mock Data
   const leftTableData = [
     { time: "10:00:15", last: "72.23", vol: "12,987", type: "S", sum: "938,089.179" },
     { time: "10:02:15", last: "72.12", vol: "5,796", type: "S", sum: "417,991.665" },
@@ -122,50 +164,36 @@ export default function TickMatch() {
     { time: "11:20:15", last: "70.58", vol: "11,584", type: "S", sum: "817,633.933" },
   ];
 
-// Component ย่อยสำหรับ Panel Dashboard (อัปเดต Header ตามรูปที่ 2)
+  // Component Panel
   const AnalysisPanel = ({ symbol, date, sumBuy, sumSell, netVol, data }) => {
     const total = parseInt(sumBuy.replace(/,/g, '')) + parseInt(sumSell.replace(/,/g, ''));
     const buyPercent = (parseInt(sumBuy.replace(/,/g, '')) / total) * 100;
 
     return (
       <div className="flex flex-col h-full bg-[#111827] border border-slate-700 rounded-lg p-3 shadow-lg overflow-hidden">
-        
-        {/* --- 1. New Header Layout (Grid) --- */}
+        {/* Header */}
         <div className="grid grid-cols-12 gap-2 mb-3 items-end">
-            
-            {/* Symbol Column */}
             <div className="col-span-7 flex flex-col gap-1">
-               {/* Label Row */}
                <div className="flex items-center gap-2">
                   <span className="bg-purple-600 text-[10px] text-white px-1.5 rounded font-bold">SYNC</span>
                   <span className="text-xs text-slate-400">Symbol *</span>
                </div>
-               {/* Input Box */}
                <div className="bg-[#0B1221] border border-slate-600 rounded px-3 py-1.5 h-9 flex items-center">
                   <input type="text" defaultValue={symbol} className="bg-transparent text-white font-bold text-sm w-full focus:outline-none uppercase" />
                </div>
             </div>
-
-            {/* Date Column */}
             <div className="col-span-3 flex flex-col gap-1">
-               {/* Label Row */}
                <span className="text-xs text-slate-400 pl-1">Date</span>
-               {/* Input Box */}
                <div className="bg-[#0B1221] border border-slate-600 rounded px-3 py-1.5 h-9 flex items-center justify-center">
                   <input type="text" defaultValue={date} className="bg-transparent text-white text-sm w-full focus:outline-none text-center" />
                </div>
             </div>
-
-            {/* Button Column */}
             <div className="col-span-2">
-               <button className="w-full h-9 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded transition shadow-[0_0_10px_rgba(37,99,235,0.3)]">
-                 SEARCH
-               </button>
+               <button className="w-full h-9 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded transition shadow-[0_0_10px_rgba(37,99,235,0.3)]">SEARCH</button>
             </div>
-
         </div>
 
-        {/* 2. Summary Cards (คงเดิม) */}
+        {/* Summary */}
         <div className="grid grid-cols-3 gap-2 mb-1">
           <div className="bg-[#1e1e1e] border border-green-900/50 rounded p-2 flex flex-col relative overflow-hidden">
             <span className="text-[10px] text-slate-400">Sum Buy</span>
@@ -184,12 +212,12 @@ export default function TickMatch() {
           </div>
         </div>
 
-        {/* 3. Progress Bar (คงเดิม) */}
+        {/* Progress */}
         <div className="w-full h-1 bg-red-600 rounded-full mb-3 flex overflow-hidden">
             <div className="h-full bg-green-500" style={{ width: `${buyPercent}%` }}></div>
         </div>
 
-        {/* 4. Filters (คงเดิม) */}
+        {/* Filters */}
         <div className="flex gap-2 mb-3">
           <button className="bg-slate-700 text-white text-[10px] px-3 py-1 rounded hover:bg-slate-600">All</button>
           <button className="bg-[#1f2937] text-slate-400 border border-slate-600 text-[10px] px-3 py-1 rounded hover:text-white">Buy Only</button>
@@ -197,7 +225,7 @@ export default function TickMatch() {
           <button className="bg-[#1f2937] text-slate-400 border border-slate-600 text-[10px] px-3 py-1 rounded hover:text-white">{'>'} 100K (Big Lot)</button>
         </div>
 
-        {/* 5. Table (คงเดิม) */}
+        {/* Table */}
         <div className="flex-1 overflow-y-auto bg-[#0B1221] rounded border border-slate-800/50 scrollbar-thin scrollbar-thumb-slate-700">
            <table className="w-full text-right border-collapse">
              <thead className="bg-[#1f2937] text-slate-400 text-[10px] font-medium sticky top-0 z-10 shadow-sm">
@@ -231,18 +259,14 @@ export default function TickMatch() {
   };
 
   /* ==========================================================
-      VIEW 1 : ยังไม่ซื้อ (CASE 1) - เหมือน DR 100%
+      VIEW 1 : ยังไม่ซื้อ (CASE 1)
   =========================================================== */
   if (!isMember) {
     return (
       <div className="relative w-full min-h-screen text-white overflow-hidden animate-fade-in pb-20">
-        
-        {/* Background Glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
-
         <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 flex flex-col items-center">
           
-          {/* Header */}
           <div className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
               <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
@@ -254,7 +278,6 @@ export default function TickMatch() {
             </p>
           </div>
 
-          {/* Preview Image Card */}
           <div className="relative group w-full max-w-5xl mb-16">
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-700"></div>
             <div className="relative bg-[#0B1221] border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
@@ -264,19 +287,22 @@ export default function TickMatch() {
                 <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
               </div>
               <div className="aspect-[16/9] w-full bg-[#0B1221]">
-                {/* เปลี่ยนรูปเป็น TickMatch */}
                 <img src="/src/assets/images/TickMatch.png" alt="TickMatch Preview" className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition duration-500" />
               </div>
             </div>
           </div>
 
-          {/* Features Section (Scrollable) */}
           <div className="w-full max-w-5xl mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
               4 Main Features
             </h2>
-            <div className="relative group">
-              {/* Left Button */}
+            
+            {/* Wrapper สำหรับ Auto Scroll + Hover Pause */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
+            >
               <button 
                 onClick={() => scroll("left")}
                 className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white hover:bg-cyan-500 hover:border-cyan-400 hover:text-white hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center transition-all duration-300 backdrop-blur-sm active:scale-95 ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
@@ -284,17 +310,16 @@ export default function TickMatch() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
 
-              {/* Scroll Container */}
-              <div ref={scrollContainerRef} onScroll={checkScroll} className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth" style={scrollbarHideStyle}>
+              {/* Container: ลบ snap-x, scroll-smooth ออกเพื่อให้ auto scroll ไหลลื่น */}
+              <div ref={scrollContainerRef} onScroll={checkScroll} className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar" style={scrollbarHideStyle}>
                 {features.map((item, index) => (
-                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 snap-center group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
+                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
                     <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">{item.title}</h3>
                     <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Right Button */}
               <button 
                 onClick={() => scroll("right")}
                 className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white hover:bg-cyan-500 hover:border-cyan-400 hover:text-white hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center transition-all duration-300 backdrop-blur-sm active:scale-95 ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
@@ -304,7 +329,6 @@ export default function TickMatch() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-4">
              <button onClick={() => navigate("/login")} className="px-8 py-3 rounded-full bg-slate-800 border border-slate-600 hover:bg-slate-700 transition">Sign In</button>
              <button onClick={() => navigate("/member-register")} className="px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 font-bold hover:shadow-lg transition">Join Membership</button>
@@ -315,7 +339,7 @@ export default function TickMatch() {
   }
 
   /* ==========================================================
-      VIEW 2 : ซื้อแล้ว แต่ยังไม่กด Start (CASE 2) - เหมือน DR 100%
+      VIEW 2 : ซื้อแล้ว แต่ยังไม่กด Start (CASE 2)
   =========================================================== */
   if (isMember && !enteredTool) {
     return (
@@ -326,7 +350,6 @@ export default function TickMatch() {
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 flex flex-col items-center">
           
-          {/* Header */}
           <div className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
               <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
@@ -338,7 +361,6 @@ export default function TickMatch() {
             </p>
           </div>
 
-          {/* Preview Image Card */}
           <div className="relative group w-full max-w-5xl mb-16">
             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-700"></div>
             <div className="relative bg-[#0B1221] border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
@@ -353,13 +375,17 @@ export default function TickMatch() {
             </div>
           </div>
 
-          {/* Features Section (Scrollable) */}
           <div className="w-full max-w-5xl mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
               4 Main Features
             </h2>
-            <div className="relative group">
-              {/* Left Button */}
+            
+            {/* Wrapper สำหรับ Auto Scroll */}
+            <div 
+              className="relative group"
+              onMouseEnter={() => isPaused.current = true}
+              onMouseLeave={() => isPaused.current = false}
+            >
               <button 
                 onClick={() => scroll("left")}
                 className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white hover:bg-cyan-500 hover:border-cyan-400 hover:text-white hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center transition-all duration-300 backdrop-blur-sm active:scale-95 ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
@@ -367,17 +393,15 @@ export default function TickMatch() {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
               </button>
 
-              {/* Scroll Container */}
-              <div ref={scrollContainerRef} onScroll={checkScroll} className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth" style={scrollbarHideStyle}>
+              <div ref={scrollContainerRef} onScroll={checkScroll} className="flex overflow-x-auto gap-6 py-4 px-1 hide-scrollbar" style={scrollbarHideStyle}>
                 {features.map((item, index) => (
-                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 snap-center group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
+                  <div key={index} className="w-[350px] md:w-[400px] flex-shrink-0 group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300">
                     <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">{item.title}</h3>
                     <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Right Button */}
               <button 
                 onClick={() => scroll("right")}
                 className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white hover:bg-cyan-500 hover:border-cyan-400 hover:text-white hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] flex items-center justify-center transition-all duration-300 backdrop-blur-sm active:scale-95 ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
@@ -387,7 +411,6 @@ export default function TickMatch() {
             </div>
           </div>
 
-          {/* Start Button */}
           <div className="flex gap-4 justify-center w-full">
             <button
               onClick={() => {
