@@ -8,77 +8,89 @@ const scrollbarHideStyle = {
 
 export default function BidAsk() {
   const navigate = useNavigate();
-  const [isMember, setIsMember] = useState(false);
 
-  // --- เพิ่ม Refs และ State สำหรับ Scroll ---
+  const [isMember, setIsMember] = useState(false);
+  const [enteredTool, setEnteredTool] = useState(false);
+  const [timeframe, setTimeframe] = useState("Day");
+
   const scrollContainerRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
 
-  // --- Logic คำนวณการโชว์ปุ่ม ---
-  const checkScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setShowLeft(scrollLeft > 1);
-      const isEnd = Math.ceil(scrollLeft + clientWidth) >= (scrollWidth - 2);
-      setShowRight(!isEnd);
-    }
-  };
-
-  // --- Logic สั่ง Scroll ---
-  const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-      const { current } = scrollContainerRef;
-      const scrollAmount = 350;
-      if (direction === "left") {
-        current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-      } else {
-        current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-      }
-      setTimeout(checkScroll, 300); 
-    }
-  };
-
-  // --- Logic เช็คสถานะ Member ---
+  /* ================= MEMBER CHECK ================= */
   useEffect(() => {
     try {
       const userProfile = localStorage.getItem("userProfile");
+
       if (userProfile) {
         const user = JSON.parse(userProfile);
-        if (user.unlockedItems && user.unlockedItems.includes("bidask")) {
+
+        if (user.unlockedItems?.includes("bidask")) {
           setIsMember(true);
+
+          const hasEntered = sessionStorage.getItem("BidAskToolEntered");
+          if (hasEntered === "true") {
+            setEnteredTool(true);
+          }
         }
       }
     } catch (error) {
-      console.error("Error checking member status:", error);
+      console.error(error);
     }
 
-    // เพิ่ม Event Listener สำหรับ Scroll
     checkScroll();
-    window.addEventListener('resize', checkScroll);
-    return () => window.removeEventListener('resize', checkScroll);
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
   }, []);
 
-  const features = [
-    {
-      title: "Historical Market Replay",
-      desc: `A tick-by-tick playback system that recreates market events. Study exactly how massive orders impacted price action during critical moments to master high-stakes trading.`,
-    },
-    {
-      title: "Supply & Demand Profiling",
-      desc: `Analyzes order density at every price level. This reveals the "true" areas of interest where real transactions are occurring, moving beyond superficial Bid/Ask numbers.`,
-    },
-    {
-      title: "Comparative Liquidity View",
-      desc: `Side-by-side Order Book comparisons for two different assets. Visualize capital shifting between stocks or entire industry sectors in real-time.`,
-    },
-    {
-      title: "Momentum Visualization",
-      desc: `Dynamic color-coded bars that aggregate Bid and Ask volume over time. Instantly reflect net buying/selling pressure and overall market sentiment.`,
-    },
-  ];
+  /* ================= SCROLL ================= */
+  const checkScroll = () => {
+    if (!scrollContainerRef.current) return;
 
-  return (
+    const { scrollLeft, scrollWidth, clientWidth } =
+      scrollContainerRef.current;
+
+    setShowLeft(scrollLeft > 1);
+    setShowRight(
+      Math.ceil(scrollLeft + clientWidth) < scrollWidth - 2
+    );
+  };
+
+  const scroll = (direction) => {
+    if (!scrollContainerRef.current) return;
+
+    scrollContainerRef.current.scrollBy({
+      left: direction === "left" ? -350 : 350,
+      behavior: "smooth",
+    });
+
+    setTimeout(checkScroll, 300);
+  };
+
+  const features = [
+  {
+    title: "Historical Market Replay",
+    desc: "Replay market tick-by-tick to analyze order flow impact."
+  },
+  {
+    title: "Supply & Demand Profiling",
+    desc: "Analyze order density at every price level."
+  },
+  {
+    title: "Comparative Liquidity View",
+    desc: "Compare liquidity between assets side-by-side."
+  },
+  {
+    title: "Momentum Visualization",
+    desc: "Visualize bid/ask pressure over time."
+  }
+];
+
+  /* ==========================================================
+     CASE 1 : NOT MEMBER
+  ========================================================== */
+  if (!isMember) {
+    return (
     <div className="relative w-full min-h-screen text-white overflow-hidden animate-fade-in pb-20">
       
       {/* Background Ambience */}
@@ -231,6 +243,308 @@ export default function BidAsk() {
         </div>
 
       </div>
+    </div>
+  );
+  }
+
+   /* ==========================================================
+     CASE 2 : MEMBER BUT NOT ENTERED
+  ========================================================== */
+  if (isMember && !enteredTool) {
+    return (
+    <div className="relative w-full min-h-screen text-white overflow-hidden animate-fade-in pb-20">
+      
+      {/* Background Ambience */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none" />
+
+      {/* Style ซ่อน Scrollbar */}
+      <style>
+        {`
+          .hide-scrollbar::-webkit-scrollbar { display: none; }
+        `}
+      </style>
+
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 flex flex-col items-center">
+
+        {/* --- Header Section --- */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight">
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
+              BidAsk
+            </span>
+          </h1>
+          <p className="text-slate-400 text-lg md:text-xl font-light">
+            Deciphering "Big Money" through Order Flow Intelligence
+          </p>
+        </div>
+
+        {/* --- Dashboard Image --- */}
+        <div className="relative group w-full max-w-5xl mb-16">
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-700"></div>
+          
+          <div className="relative bg-[#0B1221] border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-[#0f172a] px-4 py-3 flex items-center justify-between border-b border-slate-700/50">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+              </div>
+            </div>
+
+            <div className="aspect-[16/9] w-full bg-[#0B1221] relative overflow-hidden group">
+              <img
+                src="/src/assets/images/BidAsk.png"
+                alt="Bid Ask Dashboard Preview"
+                className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-[1.01] transition duration-500 ease-out"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* --- Features Section (Scroll Layout) --- */}
+        <div className="w-full max-w-5xl mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-left border-l-4 border-cyan-500 pl-4">
+            4 Main Features
+          </h2>
+
+          <div className="relative group">
+            
+            {/* 1. ปุ่มซ้าย */}
+            <button 
+              onClick={() => scroll("left")}
+              className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-8 md:-translate-x-20 z-20 
+                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                         active:scale-95
+                         ${showLeft ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`} 
+              aria-label="Scroll Left"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* 2. Scroll Container */}
+            <div 
+              ref={scrollContainerRef}
+              onScroll={checkScroll} 
+              className="flex overflow-x-auto gap-6 py-4 px-1 snap-x snap-mandatory hide-scrollbar scroll-smooth"
+              style={scrollbarHideStyle}
+            >
+              {features.map((item, index) => (
+                <div
+                  key={index}
+                  className="
+                      w-[350px] md:w-[400px] flex-shrink-0 snap-center
+                      group/card bg-[#0f172a]/60 border border-slate-700/50 p-8 rounded-xl 
+                      hover:bg-[#1e293b]/60 hover:border-cyan-500/30 transition duration-300
+                  "
+                >
+                  <h3 className="text-xl font-bold text-white mb-3 group-hover/card:text-cyan-400 transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* 3. ปุ่มขวา */}
+            <button 
+              onClick={() => scroll("right")}
+              className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 md:translate-x-20 z-20 
+                         w-12 h-12 rounded-2xl bg-[#0f172a]/90 border border-slate-600 text-white 
+                         hover:bg-cyan-500 hover:border-cyan-400 hover:text-white 
+                         hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] 
+                         flex items-center justify-center transition-all duration-300 backdrop-blur-sm
+                         active:scale-95
+                         ${showRight ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+              aria-label="Scroll Right"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+          </div>
+        </div>
+
+        {/* --- CTA Buttons --- */}
+        <div className="text-center w-full max-w-md mx-auto mt-4">
+          <button
+              onClick={() => {
+                setEnteredTool(true);
+                localStorage.setItem("BidAskToolEntered", "true"); // 🔥 จำสถานะ
+              }}
+              className="group relative inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all duration-300"
+            >
+              <span className="mr-2">Start Using Tool</span>
+              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+        </div>
+
+      </div>
+    </div>
+  );
+  }
+  
+/* ==========================================================
+   CASE 3 : TOOL SCREEN (Replay Layout)
+========================================================== */
+
+return (
+  <div className="w-full min-h-screen bg-[#0b111a] text-white px-6 py-6">
+    <div className="max-w-[1800px] mx-auto">
+
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3 text-lg font-semibold">
+          <span>📊</span>
+          <span>BidAsk Replay</span>
+        </div>
+
+        <button className="px-3 py-1 text-xs bg-slate-700 hover:bg-slate-600 rounded">
+          Sync Panels
+        </button>
+      </div>
+
+      {/* TWO PANELS */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+        <ReplayPanel />
+        <ReplayPanel />
+
+      </div>
+
+    </div>
+  </div>
+);
+}
+
+function Badge({ label, value, color }) {
+  const colors = {
+    green: "text-green-400",
+    blue: "text-blue-400",
+    red: "text-red-400",
+  };
+
+  return (
+    <div className="flex items-center gap-2 bg-[#111827] border border-slate-700 px-4 py-2 rounded-full">
+      <span className="text-xs text-slate-400">{label}</span>
+      <span className={`text-sm font-semibold ${colors[color]}`}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function ChartCard({ title }) {
+  return (
+    <div className="bg-[#111827] border border-slate-700 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 bg-[#0f172a] border-b border-slate-700 text-sm text-slate-300">
+        {title}
+      </div>
+      <div className="h-[300px] flex items-center justify-center text-slate-500">
+        Chart Area
+      </div>
+    </div>
+  );
+}
+
+function ReplayPanel() {
+  return (
+    <div className="bg-[#111827] border border-slate-700 rounded-xl overflow-hidden">
+
+      {/* TOP FORM */}
+      <div className="p-4 border-b border-slate-700 bg-[#0f172a]">
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
+                 defaultValue="DELTA" />
+          <input type="date"
+                 className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded" />
+          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
+                 defaultValue="1" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
+                 defaultValue="10:00" />
+          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
+                 defaultValue="16:30" />
+          <button className="bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded">
+            SEARCH
+          </button>
+        </div>
+
+        {/* CLOCK */}
+        <div className="mt-3 bg-black text-yellow-400 font-mono text-center py-2 rounded">
+          10:15:32
+        </div>
+      </div>
+
+      {/* ORDER BOOK */}
+      <div className="p-4 space-y-2 text-sm">
+
+        <OrderRow bid="382,581" price="72.00" ask="256,749" />
+        <OrderRow bid="436,930" price="71.75" ask="404,759" />
+        <OrderRow bid="304,457" price="71.50" ask="494,763" />
+        <OrderRow bid="249,877" price="71.25" ask="178,279" />
+        <OrderRow bid="238,003" price="71.00" ask="497,474" />
+
+        <div className="flex justify-between text-xs text-slate-400 pt-2 border-t border-slate-700">
+          <span>Total: 2.5M</span>
+          <span>Total: 1.8M</span>
+        </div>
+
+      </div>
+
+      {/* SLIDER */}
+      <div className="p-4">
+        <input type="range" className="w-full accent-yellow-400" />
+      </div>
+
+      {/* STATS */}
+      <div className="grid grid-cols-2 gap-3 p-4 text-xs border-t border-slate-700 bg-[#0f172a]">
+        <StatBox title="OPEN" value="71.00" />
+        <StatBox title="HIGH" value="73.50" />
+        <StatBox title="LOW" value="70.75" />
+        <StatBox title="CLOSE" value="72.25" />
+      </div>
+
+    </div>
+  );
+}
+
+function OrderRow({ bid, price, ask }) {
+  return (
+    <div className="grid grid-cols-3 items-center">
+
+      <div className="text-blue-400 bg-blue-900/30 px-2 py-1 rounded text-right">
+        {bid}
+      </div>
+
+      <div className="text-center text-green-400 font-semibold">
+        {price}
+      </div>
+
+      <div className="text-red-400 bg-red-900/30 px-2 py-1 rounded">
+        {ask}
+      </div>
+
+    </div>
+  );
+}
+
+function StatBox({ title, value }) {
+  return (
+    <div className="bg-[#111827] border border-slate-700 p-2 rounded flex justify-between">
+      <span className="text-slate-400">{title}</span>
+      <span className="text-white font-semibold">{value}</span>
     </div>
   );
 }

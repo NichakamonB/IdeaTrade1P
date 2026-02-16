@@ -28,7 +28,7 @@ export default function Gold() {
         if (user.unlockedItems?.includes("gold")) {
           setIsMember(true);
 
-          const hasEntered = localStorage.getItem("GoldToolEntered");
+          const hasEntered = sessionStorage.getItem("GoldToolEntered");
           if (hasEntered === "true") {
             setEnteredTool(true);
           }
