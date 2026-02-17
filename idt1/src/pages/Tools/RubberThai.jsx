@@ -15,8 +15,24 @@ export default function RubberThai() {
   const [enteredTool, setEnteredTool] = useState(false);
 
   const [period, setPeriod] = useState("MAX");
-  const [symbol, setSymbol] = useState("STA");
+  const [symbol, setSymbol] = useState("");
+  const [symbolQuery, setSymbolQuery] = useState("");
+  const [showSymbolDropdown, setShowSymbolDropdown] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+
+  const symbolList = [
+    "STA",
+    "NER",
+    "TRUBB",
+    "STGT",
+    "24CS",
+    "CMAN",
+    "TEGH"
+  ];
+
+  const filteredSymbols = symbolList.filter(s =>
+    s.toLowerCase().includes(symbolQuery.toLowerCase())
+  );
 
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
@@ -477,15 +493,95 @@ export default function RubberThai() {
               ←
             </button>
 
-            {/* Search Pill */}
-            <div className="flex items-center bg-[#111827] border border-slate-700 px-4 py-2 rounded-full w-[250px]">
-              <span className="text-slate-400 text-sm">🔍</span>
-              <input
-                type="text"
-                defaultValue="24CS"
-                className="bg-transparent outline-none text-sm ml-2 w-full text-slate-300"
-              />
-              <span className="text-slate-500 cursor-pointer">✕</span>
+           {/* CENTER SYMBOL */}
+            <div className="absolute left-1/2 -translate-x-1/2">
+
+              <div className="relative w-64">
+
+                {/* INPUT BOX */}
+                <div
+                  className="
+                    relative
+                    bg-[#111827]
+                    border border-slate-700
+                    rounded-md
+                    px-4 py-3
+                    flex items-center
+                  "
+                >
+                  <input
+                    value={symbolQuery}
+                    onChange={(e) => {
+                      setSymbolQuery(e.target.value);
+                      setShowSymbolDropdown(true);
+                      setSymbol("");
+                    }}
+                    onFocus={() => setShowSymbolDropdown(true)}
+                    className="w-full bg-transparent outline-none text-white text-sm"
+                  />
+
+                  <div className="flex items-center gap-2">
+
+                    {(symbol || symbolQuery) && (
+                      <button
+                        onClick={() => {
+                          setSymbol("");
+                          setSymbolQuery("");
+                        }}
+                        className="text-slate-400 hover:text-white text-xs ml-2"
+                      >
+                        ✕
+                      </button>
+                    )}
+
+                    <span
+                      onClick={() => setShowSymbolDropdown(!showSymbolDropdown)}
+                      className="text-slate-400 text-xs ml-2 cursor-pointer"
+                    >
+                      ▾
+                    </span>
+                  </div>
+                </div>
+
+                {/* FLOATING LABEL */}
+                <label
+                  className={`
+                    absolute left-4 px-2 transition-all duration-200 pointer-events-none
+                    ${
+                      symbol || symbolQuery || showSymbolDropdown
+                        ? "-top-2 text-xs bg-[#0b111a]"
+                        : "top-1/2 -translate-y-1/2 text-sm"
+                    }
+                  `}
+                >
+                </label>
+
+                {/* DROPDOWN */}
+                {showSymbolDropdown && (
+                  <div className="absolute mt-2 w-full bg-[#0f172a] border border-slate-700 rounded-xl shadow-2xl max-h-72 overflow-y-auto z-50">
+                    {filteredSymbols.length > 0 ? (
+                      filteredSymbols.map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            setSymbol(item);
+                            setSymbolQuery(item);
+                            setShowSymbolDropdown(false);
+                          }}
+                          className="px-4 py-2 text-sm text-slate-300 hover:bg-cyan-500 hover:text-white cursor-pointer transition"
+                        >
+                          {item}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-sm text-slate-500">
+                        No results
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
 
