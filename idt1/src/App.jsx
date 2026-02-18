@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // 1. อย่าลืม import useEffect
+import React, { useState, useEffect } from "react"; 
 import { BrowserRouter, useLocation } from "react-router-dom";
 import AppRoutes from "@/routes/AppRoutes";
 import Sidebar from "@/layouts/Sidebar";
@@ -8,20 +8,40 @@ function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [activePage, setActivePage] = useState("preview-projects");
 
-  // ✅ เพิ่ม logic ให้ Sidebar รู้จักหน้า profile และ subscription
   useEffect(() => {
-    if (location.pathname === "/profile") setActivePage("profile");
-    if (location.pathname === "/subscription") setActivePage("subscription");
+    const path = location.pathname;
+    if (path === "/profile") setActivePage("profile");
+    else if (path === "/subscription") setActivePage("subscription");
+    // ถ้าอยากให้ sidebar highlight เครื่องมือเมื่อเข้าผ่าน url โดยตรง ก็เพิ่มเงื่อนไขตรงนี้ได้
   }, [location.pathname]);
 
-  // ✅ รายชื่อหน้าที่จะ "ซ่อน" Sidebar (Dashboard มันมี Sidebar ของมันเอง เราเลยซ่อนอันกลาง)
-  // อย่าใส่ "/profile" ลงในนี้ เพราะหน้า Profile ไม่มี Sidebar เราเลยต้องใช้อันกลาง
-  const hideSidebarPaths = ["/", "/register", "/member-register", "/welcome", "/dashboard"];
+  // เราต้องซ่อน Sidebar ของ App.js เพื่อไม่ให้มันขึ้นซ้อนกัน 2 อัน
+  const hideSidebarPaths = [
+    "/", 
+    "/register", 
+    "/member-register", 
+    "/welcome", 
+    "/dashboard",
+    // เพิ่ม Tools ทั้งหมดลงในนี้ เพื่อให้ Dashboard เป็นคนแสดง Sidebar แทน App.js
+    "/mit", "/MIT",
+    "/stock-fortune", "/fortune",
+    "/petroleum", "/petroleum-preview",
+    "/rubber", "/RubberThai",
+    "/flow", "/FlowIntraday",
+    "/s50", "/S50",
+    "/gold", "/Gold",
+    "/bidask", "/BidAsk",
+    "/tickmatch", "/TickMatch",
+    "/dr", "/DRInsight"
+  ];
   
-  const shouldHideSidebar = hideSidebarPaths.includes(location.pathname);
+  // เช็คว่า path ปัจจุบันอยู่ในรายการที่ต้องซ่อน Sidebar หรือไม่
+  const shouldHideSidebar = hideSidebarPaths.some(path => location.pathname.includes(path));
 
   return (
-    <div className="min-h-screen bg-[#0c0f14] text-white flex">
+    <div className="flex h-screen bg-[#0c0f14] text-white overflow-hidden">
+      
+      {/* Sidebar (Render เฉพาะหน้าที่ไม่อยู่ใน list ข้างบน) */}
       {!shouldHideSidebar && (
         <Sidebar 
           collapsed={collapsed}
@@ -31,14 +51,14 @@ function MainLayout() {
         />
       )}
 
-      <main className={`flex-1 min-h-screen transition-all duration-300 relative ${
-          shouldHideSidebar ? "ml-0 w-full" : collapsed ? "ml-[80px]" : "ml-[280px]"
-        }`}>
-        {/* ลบ Padding ออกถ้าต้องการให้พื้นหลังเต็มจอ หรือใส่ p-6 ถ้าอยากได้ขอบ */}
-        <div className={shouldHideSidebar ? "p-0" : "p-0"}>
+      {/* Main Content */}
+      <main className="flex-1 h-screen overflow-y-auto relative transition-all duration-300">
+
+        <div className="w-full h-full">
            <AppRoutes />
         </div>
       </main>
+
     </div>
   );
 }

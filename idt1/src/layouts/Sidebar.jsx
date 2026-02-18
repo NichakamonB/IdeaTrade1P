@@ -252,7 +252,7 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-[9999] h-screen bg-gradient-to-b from-[#0c0f14] to-[#0a0d11] border-r border-white/10 flex flex-col transition-all duration-300 ${
+        className={`h-screen bg-gradient-to-b from-[#0c0f14] to-[#0a0d11] border-r border-white/10 flex flex-col transition-all duration-300 shrink-0 ${
           collapsed ? "w-[80px] items-center py-4" : "w-[280px] overflow-hidden"
         }`}
       >

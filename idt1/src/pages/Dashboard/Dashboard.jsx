@@ -159,11 +159,11 @@ export default function Dashboard({ initialPage }) {
     return <PreviewProjects />;
   };
 
-  /* --- Main Render --- */
+/* --- Main Render --- */
   return (
     <div className="flex h-screen bg-[#0B0E14] text-white overflow-hidden font-sans">
       
-      {/* Sidebar */}
+      {/* Sidebar: ต้องแน่ใจว่าในไฟล์ Sidebar.jsx คุณลบ 'fixed' ออกแล้วตามที่คุยกัน */}
       <Sidebar
         collapsed={collapsed}
         setCollapsed={setCollapsed}
@@ -176,16 +176,12 @@ export default function Dashboard({ initialPage }) {
       />
 
       {/* Main Content Area */}
-      <main
-        className={`flex-1 transition-all duration-300 overflow-y-auto ${
-          isFullWidthPage() 
-            ? "ml-0" 
-            : (collapsed ? "ml-[80px]" : "ml-[280px]")
-        }`}
-      >
+      <main className="flex-1 w-full relative overflow-y-auto transition-all duration-300">
+        
         <div className={isFullWidthPage() || isNoPaddingPage() ? "p-0" : "p-8 pb-20"}>
           {renderContent()}
         </div>
+
       </main>
     </div>
   );
