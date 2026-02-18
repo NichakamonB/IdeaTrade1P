@@ -480,7 +480,7 @@ export default function RubberThai() {
       <div className="max-w-[1500px] mx-auto">
 
         {/* ================= TOP SEARCH BAR ================= */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="relative flex items-center justify-between mb-6">
 
           {/* Left */}
           <div className="flex items-center gap-4">
