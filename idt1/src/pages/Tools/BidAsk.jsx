@@ -510,83 +510,287 @@ function ChartCard({ title }) {
 }
 
 function ReplayPanel() {
+
+const [startTime, setStartTime] = useState("00:00");
+const [endTime, setEndTime] = useState("00:00");
+
+  const [sliderValue, setSliderValue] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(startTime);
+
+  const [orderBook, setOrderBook] = useState([]);
+
+  const totalBid = orderBook.reduce((sum, row) => sum + (row.bidVol || 0), 0);
+  const totalAsk = orderBook.reduce((sum, row) => sum + (row.askVol || 0), 0);
+
+  // ===== TIME HELPERS =====
+  const toSeconds = (time) => {
+    const [h, m] = time.split(":").map(Number);
+    return h * 3600 + m * 60;
+  };
+
+  const toHHMMSS = (seconds) => {
+    const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
+    const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+    const s = String(seconds % 60).padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  };
+
+  // ===== Sync slider -> time =====
+  useEffect(() => {
+    const startSec = toSeconds(startTime);
+    const endSec = toSeconds(endTime);
+    const total = endSec - startSec;
+
+    const current = startSec + (sliderValue / 100) * total;
+    setCurrentTime(toHHMMSS(Math.floor(current)));
+
+  }, [sliderValue, startTime, endTime]);
+
+  // ===== Play system =====
+  useEffect(() => {
+
+    if (!isPlaying) return;
+
+    const interval = setInterval(() => {
+      setSliderValue((prev) => {
+        if (prev >= 100) {
+          setIsPlaying(false);
+          return 100;
+        }
+        return Number(prev) + 1;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+
+  }, [isPlaying]);
+
+  const generateOrderBook = (timePercent) => {
+
+  const basePrice = 72 - (timePercent * 0.02); // ราคาค่อย ๆ ลดตามเวลา
+
+  const rows = [];
+
+  for (let i = 0; i < 10; i++) {
+
+    const bidPrice = (basePrice - i * 0.25).toFixed(2);
+    const askPrice = (parseFloat(bidPrice) + 0.25).toFixed(2);
+
+    const bidVol = Math.floor(200000 + Math.random() * 400000);
+    const askVol = Math.floor(200000 + Math.random() * 400000);
+
+    rows.push({
+      bidVol,
+      bid: bidPrice,
+      ask: askPrice,
+      askVol
+    });
+  }
+
+  return rows;
+};
+
+useEffect(() => {
+  setOrderBook(generateOrderBook(0));
+}, []);
+
+  useEffect(() => {
+  const newBook = generateOrderBook(sliderValue);
+  setOrderBook(newBook);
+}, [sliderValue]);
+
   return (
     <div className="bg-[#111827] border border-slate-700 rounded-xl overflow-hidden">
 
-      {/* TOP FORM */}
+      {/* HEADER */}
       <div className="p-4 border-b border-slate-700 bg-[#0f172a]">
-        <div className="grid grid-cols-3 gap-3 mb-3">
-          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
-                 defaultValue="DELTA" />
-          <input type="date"
-                 className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded" />
-          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
-                 defaultValue="1" />
+
+        <div className="grid grid-cols-3 gap-3 mb-3 text-xs text-slate-400">
+          <div>
+            <div>Symbol</div>
+            <input className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded" defaultValue="DELTA"/>
+          </div>
+          <div>
+            <div>Date</div>
+            <input type="date" className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded"/>
+          </div>
+          <div>
+            <div>Speed</div>
+            <input className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded" defaultValue="1"/>
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
-                 defaultValue="10:00" />
-          <input className="bg-[#111827] border border-slate-600 px-3 py-2 text-sm rounded"
-                 defaultValue="16:30" />
-          <button className="bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded">
+        <div className="grid grid-cols-3 gap-3 text-xs text-slate-400">
+          <div>
+            <div>Start</div>
+            <input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              step="60"
+              className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded"
+            />
+          </div>
+          <div>
+            <div>End</div>
+            <input
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              step="60"
+              className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded"
+            />
+          </div>
+          <button className="bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-semibold text-white">
             SEARCH
           </button>
         </div>
 
-        {/* CLOCK */}
         <div className="mt-3 bg-black text-yellow-400 font-mono text-center py-2 rounded">
-          10:15:32
+          {currentTime}
         </div>
-      </div>
-
-      {/* ORDER BOOK */}
-      <div className="p-4 space-y-2 text-sm">
-
-        <OrderRow bid="382,581" price="72.00" ask="256,749" />
-        <OrderRow bid="436,930" price="71.75" ask="404,759" />
-        <OrderRow bid="304,457" price="71.50" ask="494,763" />
-        <OrderRow bid="249,877" price="71.25" ask="178,279" />
-        <OrderRow bid="238,003" price="71.00" ask="497,474" />
-
-        <div className="flex justify-between text-xs text-slate-400 pt-2 border-t border-slate-700">
-          <span>Total: 2.5M</span>
-          <span>Total: 1.8M</span>
-        </div>
-
       </div>
 
       {/* SLIDER */}
-      <div className="p-4">
-        <input type="range" className="w-full accent-yellow-400" />
+    <div className="px-4 py-3 bg-[#0f172a] border-t border-slate-700">
+
+      <div className="flex items-center gap-4">
+
+        {/* RANGE BAR */}
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={sliderValue}
+          onChange={(e) => setSliderValue(e.target.value)}
+          className="flex-1 h-[3px] appearance-none bg-slate-600 rounded-full 
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-4
+                    [&::-webkit-slider-thumb]:h-4
+                    [&::-webkit-slider-thumb]:bg-yellow-400
+                    [&::-webkit-slider-thumb]:rounded-full
+                    [&::-webkit-slider-thumb]:cursor-pointer"
+        />
+
+        {/* PLAY BUTTON */}
+        <button
+          onClick={() => setIsPlaying(!isPlaying)}
+          className="w-7 h-7 flex items-center justify-center bg-yellow-400 hover:bg-yellow-300 rounded-full text-black text-xs font-bold transition"
+        >
+          {isPlaying ? "❚❚" : "▶"}
+        </button>
+
+      </div>
+
+    </div>
+
+      {/* ORDER BOOK */}
+      <div className="bg-[#0b111a]">
+
+        {orderBook.map((row, i) => (
+    <OrderRow
+      key={i}
+      bidVol={row.bidVol.toLocaleString()}
+      bid={row.bid}
+      ask={row.ask}
+      askVol={row.askVol.toLocaleString()}
+    />
+  ))}
+
+        {/* TOTAL ROW */}
+         <div className="grid grid-cols-4 h-[36px] items-center border-t border-slate-700 bg-[#111827] text-[12px] font-semibold">
+
+          {/* TOTAL BID */}
+          <div className="text-right pr-3 text-blue-400">
+            Total: {totalBid.toLocaleString()}
+          </div>
+
+          {/* EMPTY */}
+          <div></div>
+
+          {/* EMPTY */}
+          <div></div>
+
+          {/* TOTAL ASK */}
+          <div className="text-left pl-3 text-red-400">
+            Total: {totalAsk.toLocaleString()}
+          </div>
+
+        </div>
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-2 gap-3 p-4 text-xs border-t border-slate-700 bg-[#0f172a]">
-        <StatBox title="OPEN" value="71.00" />
-        <StatBox title="HIGH" value="73.50" />
-        <StatBox title="LOW" value="70.75" />
-        <StatBox title="CLOSE" value="72.25" />
+      <div className="grid grid-cols-2 gap-4 p-4 border-t border-slate-700 bg-[#0f172a]">
+        <StatSection title="In Range" />
+        <StatSection title="Actual" />
       </div>
 
     </div>
   );
 }
 
-function OrderRow({ bid, price, ask }) {
-  return (
-    <div className="grid grid-cols-3 items-center">
+function OrderRow({ bidVol, bid, ask, askVol }) {
 
-      <div className="text-blue-400 bg-blue-900/30 px-2 py-1 rounded text-right">
+  const maxVolume = 500000;
+  const bidWidth = (parseInt(bidVol.replace(/,/g, "")) / maxVolume) * 100;
+  const askWidth = (parseInt(askVol.replace(/,/g, "")) / maxVolume) * 100;
+
+  return (
+    <div className="grid grid-cols-4 items-center text-[12px] h-[32px] border-b border-slate-800 relative">
+
+      {/* BID VOL */}
+      <div className="relative text-right pr-3 text-slate-300 font-medium overflow-hidden">
+        <div
+          className="absolute right-0 top-0 h-full bg-blue-900/60"
+          style={{ width: `${bidWidth}%` }}
+        />
+        <span className="relative z-10">{bidVol}</span>
+      </div>
+
+      {/* BID PRICE */}
+      <div className="text-center text-green-400 font-semibold">
         {bid}
       </div>
 
-      <div className="text-center text-green-400 font-semibold">
-        {price}
+      {/* ASK PRICE */}
+      <div className="text-center text-red-400 font-semibold">
+        {ask}
       </div>
 
-      <div className="text-red-400 bg-red-900/30 px-2 py-1 rounded">
-        {ask}
+      {/* ASK VOL */}
+      <div className="relative text-left pl-3 text-slate-300 font-medium overflow-hidden">
+        <div
+          className="absolute left-0 top-0 h-full bg-red-900/60"
+          style={{ width: `${askWidth}%` }}
+        />
+        <span className="relative z-10">{askVol}</span>
+      </div>
+
+    </div>
+  );
+}
+
+function StatSection({ title }) {
+  return (
+    <div className="bg-[#111827] border border-slate-700 rounded">
+
+      <div className="px-3 py-2 text-[11px] text-slate-400 border-b border-slate-700 bg-[#1e293b]">
+        {title}
+      </div>
+
+      <div className="grid grid-cols-4 text-[10px] text-slate-500 px-3 pt-2">
+        <span>OPEN</span>
+        <span>HIGH</span>
+        <span>LOW</span>
+        <span>CLOSE</span>
+      </div>
+
+      <div className="grid grid-cols-4 px-3 pb-3 pt-1 text-[13px] font-semibold text-white">
+        <span>71.00</span>
+        <span>73.50</span>
+        <span>70.75</span>
+        <span>72.25</span>
       </div>
 
     </div>
