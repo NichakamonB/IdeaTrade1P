@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 /* ================= COMPONENT IMPORTS ================= */
 import Navbar from "@/layouts/Navbar.jsx";
 import Sidebar from "@/layouts/Sidebar.jsx";
+import MITLanding from "@/pages/Tools/MIT.jsx"; // ✅ Import แล้ว
 import PreviewProjects from "@/pages/Dashboard/PreviewProjects.jsx";
 import PremiumTools from "@/pages/Dashboard/PremiumTools.jsx";
 import Profile from "@/pages/Profile/Profile.jsx";
@@ -25,6 +26,10 @@ const CHART_IMAGE_URL = "https://images.unsplash.com/photo-1611974765270-ca12586
 
 // ✅ 1. Mapping: จับคู่ ID -> Component ที่จะแสดงผล
 const TOOL_COMPONENTS = {
+  // MIT (เพิ่มตรงนี้เพื่อให้เรียกใช้ได้)
+  mit: MITLanding,
+  "MIT": MITLanding,
+
   // Fortune
   fortune: StockFortuneTeller,
   "stock-fortune": StockFortuneTeller,
@@ -69,7 +74,7 @@ const FULL_WIDTH_PATHS = [];
 const NO_PADDING_PAGES = [
   "profile", 
   "subscription", 
-  // "mit",  <-- ลบ MIT ออกจาก list นี้
+  "mit", // ✅ เพิ่ม MIT กลับเข้ามาใน list นี้เพื่อให้แสดงเต็มจอ
   ...Object.keys(TOOL_COMPONENTS) 
 ]; 
 
@@ -92,7 +97,9 @@ export default function Dashboard({ initialPage }) {
       const path = location.pathname;
       
       // ✅ Check path mapping (เพิ่มให้ครบทุก Tools)
-      if (path === "/stock-fortune" || path === "/fortune") setActivePage("fortune");
+      // เพิ่มเงื่อนไขสำหรับ MIT
+      if (path === "/mit" || path === "/MIT") setActivePage("mit");
+      else if (path === "/stock-fortune" || path === "/fortune") setActivePage("fortune");
       else if (path.includes("/petroleum")) setActivePage("petroleum");
       else if (path.includes("/rubber") || path.includes("/RubberThai")) setActivePage("rubber");
       else if (path.includes("/flow") || path.includes("/FlowIntraday")) setActivePage("flow");
@@ -141,9 +148,8 @@ export default function Dashboard({ initialPage }) {
     if (activePage === "preview-projects" || activePage === "whatsnew") return <PreviewProjects />;
     if (activePage === "premiumtools") return <PremiumTools />;
 
-    // 3. (ลบส่วน Logic แสดงผลหน้า MIT ออกไปแล้ว)
-
-    // 4. ✅ Tools Rendering (Render แบบ Dynamic ตาม Map)
+    // 3. ✅ Tools Rendering
+    // เนื่องจากเราเพิ่ม MIT เข้าไปใน TOOL_COMPONENTS แล้ว มันจะถูก render ตรงนี้อัตโนมัติครับ
     const ToolComponent = TOOL_COMPONENTS[activePage];
     if (ToolComponent) {
       return <ToolComponent />;
