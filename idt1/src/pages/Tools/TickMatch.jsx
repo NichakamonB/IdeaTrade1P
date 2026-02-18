@@ -259,7 +259,7 @@ export default function TickMatch() {
   };
 
   /* ==========================================================
-      VIEW 1 : ยังไม่ซื้อ (CASE 1)
+      CASE 1 : PREVIEW VERSION (Not Member)
   =========================================================== */
   if (!isMember) {
     return (
@@ -339,7 +339,7 @@ export default function TickMatch() {
   }
 
   /* ==========================================================
-      VIEW 2 : ซื้อแล้ว แต่ยังไม่กด Start (CASE 2)
+      CASE 2 : START SCREEN (MEMBER BUT NOT ENTERED)
   =========================================================== */
   if (isMember && !enteredTool) {
     return (
@@ -429,7 +429,7 @@ export default function TickMatch() {
   }
 
   /* ==========================================================
-      VIEW 3: DASHBOARD (Real Tool - Split View)
+      CASE 3 : FULL PRODUCTION PETROLEUM DASHBOARD
   =========================================================== */
   return (
     <div className="w-full min-h-screen bg-[#0B1221] text-white p-4 animate-fade-in flex flex-col gap-4">

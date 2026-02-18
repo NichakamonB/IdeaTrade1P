@@ -327,7 +327,7 @@ export default function PetroleumInsights() {
   }
 
   /* ==========================================================
-      CASE 2 : Start Screen (Member but not entered)
+      CASE 2 : START SCREEN (MEMBER BUT NOT ENTERED)
   =========================================================== */
   if (isMember && !enteredTool) {
     return (

@@ -141,7 +141,7 @@ export default function S50() {
   ];
 
   /* ==========================================================
-    CASE 1 : PREVIEW (NOT MEMBER)
+    CASE 1 : PREVIEW VERSION (Not Member)
   ========================================================== */
   if (!isMember) {
     return (
@@ -295,7 +295,7 @@ export default function S50() {
   }
 
   /* ==========================================================
-    CASE 2 : MEMBER BUT NOT ENTERED
+    CASE 2 : START SCREEN (MEMBER BUT NOT ENTERED)
   ========================================================== */
   if (isMember && !enteredTool) {
     return (
@@ -446,7 +446,7 @@ export default function S50() {
   }
 
   /* ==========================================================
-    CASE 3 : TOOL SCREEN
+    CASE 3 : FULL PRODUCTION PETROLEUM DASHBOARD
   ========================================================== */
 
   return (

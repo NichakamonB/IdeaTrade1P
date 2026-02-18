@@ -1,5 +1,5 @@
 // src/pages/tools/FlowIntraday.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 const scrollbarHideStyle = {
@@ -14,7 +14,39 @@ export default function FlowIntraday() {
 
   const [isMember, setIsMember] = useState(false);
   const [enteredTool, setEnteredTool] = useState(false);
+
   const [layout, setLayout] = useState("4");
+  const [symbols, setSymbols] = useState(Array(12).fill(""));
+
+  const boxes = Array.from({ length: 12 });
+
+  // ===== Deterministic Mock Chart Generator =====
+  const generateSeededData = (symbol, points = 40) => {
+    let seed = 0;
+
+    // สร้าง seed จากตัวอักษรในชื่อ symbol
+    for (let i = 0; i < symbol.length; i++) {
+      seed += symbol.charCodeAt(i);
+    }
+
+    const data = [];
+    let value = 100 + (seed % 20);
+
+    for (let i = 0; i < points; i++) {
+      const random = Math.sin(seed + i) * 10000;
+      const change = (random - Math.floor(random)) * 4 - 2;
+      value += change;
+      data.push(value);
+    }
+
+    return data;
+  };
+
+  const chartData = useMemo(() => {
+    return symbols.map((symbol) =>
+      symbol ? generateSeededData(symbol) : null
+    );
+  }, [symbols]);
 
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
@@ -138,7 +170,7 @@ export default function FlowIntraday() {
   ];
 
   /* ==========================================================
-      CASE 1 : PREVIEW (NOT MEMBER)
+      CASE 1 : PREVIEW VERSION (Not Member)
   ========================================================== */
   if (!isMember) {
      return (
@@ -442,7 +474,27 @@ export default function FlowIntraday() {
   );
   }
 
- const boxes = Array.from({ length: 12 });
+  /* ==========================================================
+      CASE 3 : FULL PRODUCTION PETROLEUM DASHBOARD
+  ========================================================== */
+
+  const normalizeData = (data, height = 150) => {
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+
+    return data.map((val, i) => {
+      const x = (i / (data.length - 1)) * 100;
+      const y = height - ((val - min) / (max - min)) * height;
+      return `${x},${y}`;
+    }).join(" ");
+  };
+
+  const handleSymbolChange = (index, value) => {
+  const updated = [...symbols];
+  updated[index] = value;
+  setSymbols(updated);
+};
 
   return (
     <div className="w-full min-h-screen bg-[#0b111a] text-white px-6 py-6">
@@ -526,11 +578,15 @@ export default function FlowIntraday() {
 
               <div className="flex items-center justify-between px-3 py-2 bg-[#0f172a] border-b border-slate-700">
 
-                <select className="bg-transparent text-xs text-slate-400 outline-none">
-                  <option>Symbol...</option>
-                  <option>PTT</option>
-                  <option>TOP</option>
-                  <option>DELTA</option>
+                <select
+                  value={symbols[index]}
+                  onChange={(e) => handleSymbolChange(index, e.target.value)}
+                  className="bg-transparent text-xs text-slate-400 outline-none"
+                >
+                  <option value="">Symbol...</option>
+                  <option value="PTT">PTT</option>
+                  <option value="TOP">TOP</option>
+                  <option value="DELTA">DELTA</option>
                 </select>
 
                 <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -547,9 +603,48 @@ export default function FlowIntraday() {
 
               </div>
 
-              <div className="h-[180px] bg-[#0b1220] flex items-center justify-center text-slate-600 text-sm">
-                Chart Area
-              </div>
+              <div className="h-[180px] bg-[#0b1220] relative flex items-center justify-center">
+
+              {!symbols[index] ? (
+                <div className="text-slate-600 text-sm">
+                  Select Symbol to View Chart
+                </div>
+              ) : (
+                (() => {
+                  const data = chartData[index];
+                  const points = normalizeData(data);
+                  const isUp = data[data.length - 1] >= data[0];
+
+                  return (
+                    <svg
+                      viewBox="0 0 100 150"
+                      preserveAspectRatio="none"
+                      className="w-full h-full"
+                    >
+                      <defs>
+                        <linearGradient id={`grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={isUp ? "#22c55e" : "#ef4444"} stopOpacity="0.4"/>
+                          <stop offset="100%" stopColor="transparent"/>
+                        </linearGradient>
+                      </defs>
+
+                      <polygon
+                        fill={`url(#grad-${index})`}
+                        points={`0,150 ${points} 100,150`}
+                      />
+
+                      <polyline
+                        fill="none"
+                        stroke={isUp ? "#22c55e" : "#ef4444"}
+                        strokeWidth="2"
+                        points={points}
+                      />
+                    </svg>
+                  );
+                })()
+              )}
+
+            </div>
 
             </div>
           ))}

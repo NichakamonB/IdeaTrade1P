@@ -160,7 +160,7 @@ export default function RubberThai() {
   ];
 
   /* ==========================================================
-      CASE 1 : PREVIEW
+      CASE 1 : PREVIEW VERSION (Not Member)
   =========================================================== */
   if (!isMember) {
      return (
@@ -314,7 +314,7 @@ export default function RubberThai() {
   }
 
   /* ==========================================================
-      CASE 2 : START SCREEN
+      CASE 2 : START SCREEN (MEMBER BUT NOT ENTERED)
   =========================================================== */
   if (isMember && !enteredTool) {
      return (
@@ -465,7 +465,7 @@ export default function RubberThai() {
   }
 
   /* ==========================================================
-      CASE 3 : FULL DASHBOARD (Rubber Thai - Production UI)
+      CASE 3 : FULL PRODUCTION PETROLEUM DASHBOARD
   ========================================================== */
 
   const metrics = [

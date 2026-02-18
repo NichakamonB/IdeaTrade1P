@@ -169,7 +169,7 @@ export default function DRInsight() {
   const allStockOptions = [...usaStocks, ...europeStocks, ...asiaStocks];
 
   /* ==========================================================
-      VIEW 1 : ยังไม่ซื้อ (CASE 1)
+      CASE 1 : PREVIEW VERSION (Not Member)
   =========================================================== */
   if (!isMember) {
     return (
@@ -264,7 +264,7 @@ export default function DRInsight() {
   }
 
   /* ==========================================================
-      VIEW 2 : ซื้อแล้ว แต่ยังไม่กด Start (CASE 2)
+      CASE 2 : START SCREEN (MEMBER BUT NOT ENTERED)
   =========================================================== */
   if (isMember && !enteredTool) {
     return (
@@ -366,8 +366,7 @@ export default function DRInsight() {
   }
 
   /* ==========================================================
-      VIEW 3: DASHBOARD (Real Tool - 3 Columns Layout)
-      (คง Layout เดิมของ DR Insight ไว้ เพราะต้องใช้พื้นที่แบบ 3 Columns)
+      CASE 3 : FULL PRODUCTION PETROLEUM DASHBOARD
   =========================================================== */
   return (
     <div className="w-full min-h-screen bg-[#0B1221] text-white p-4 animate-fade-in flex flex-col gap-4">

@@ -181,7 +181,7 @@ export default function StockFortuneTeller() {
   ];
 
   /* ==========================================================
-      CASE 1 : ยังไม่ซื้อ → PREVIEW VERSION
+      CASE 1 : PREVIEW VERSION (Not Member)
   =========================================================== */
   if (!isMember) {
     return (
@@ -319,7 +319,7 @@ export default function StockFortuneTeller() {
   }
 
   /* ==========================================================
-      CASE 2 : ซื้อแล้ว แต่ยังไม่กด Start
+      CASE 2 : START SCREEN (MEMBER BUT NOT ENTERED)
   =========================================================== */
   if (isMember && !enteredTool) {
     return (
@@ -455,7 +455,7 @@ export default function StockFortuneTeller() {
   }
 
   /* ==========================================================
-      CASE 3 : เข้า Full Dashboard แล้ว
+      CASE 3 : FULL PRODUCTION PETROLEUM DASHBOARD
   =========================================================== */
   return (
     <div className="w-full min-h-screen bg-[#0B1221] text-white px-6 py-6">
