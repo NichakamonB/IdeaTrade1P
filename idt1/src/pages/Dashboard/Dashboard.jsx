@@ -24,7 +24,6 @@ import DRInsight from "@/pages/Tools/DRInsight";
 const CHART_IMAGE_URL = "https://images.unsplash.com/photo-1611974765270-ca1258634369?q=80&w=1964&auto=format&fit=crop";
 
 // ✅ 1. Mapping: จับคู่ ID -> Component ที่จะแสดงผล
-// เพิ่ม Key ทั้งแบบตัวเล็ก (Sidebar id) และแบบชื่อเต็ม (Route path) เพื่อความชัวร์
 const TOOL_COMPONENTS = {
   // Fortune
   fortune: StockFortuneTeller,
@@ -70,8 +69,8 @@ const FULL_WIDTH_PATHS = [];
 const NO_PADDING_PAGES = [
   "profile", 
   "subscription", 
-  "mit",
-  ...Object.keys(TOOL_COMPONENTS) // กระจาย key ทั้งหมดลงไปอัตโนมัติ
+  // "mit",  <-- ลบ MIT ออกจาก list นี้
+  ...Object.keys(TOOL_COMPONENTS) 
 ]; 
 
 /* ================= MAIN COMPONENT: DASHBOARD ================= */
@@ -82,9 +81,7 @@ export default function Dashboard({ initialPage }) {
   /* --- State --- */
   const [collapsed, setCollapsed] = useState(false);
   const [activePage, setActivePage] = useState(initialPage || "preview-projects");
-  
-  // Note: unlockedItems อาจไม่จำเป็นต้องใช้ในหน้านี้แล้ว 
-  // หากคุณย้าย Logic การเช็คสิทธิ์ไปไว้ในแต่ละ Component
+   
   const [unlockedItems, setUnlockedItems] = useState([]);
 
   /* --- Effects --- */
@@ -129,7 +126,6 @@ export default function Dashboard({ initialPage }) {
   };
 
   const isNoPaddingPage = () => {
-    // เช็คว่า activePage อยู่ในลิสต์ NO_PADDING_PAGES หรือไม่
     if (NO_PADDING_PAGES.includes(activePage)) return true;
     if (location.pathname.includes("/profile")) return true;
     return false;
@@ -145,41 +141,9 @@ export default function Dashboard({ initialPage }) {
     if (activePage === "preview-projects" || activePage === "whatsnew") return <PreviewProjects />;
     if (activePage === "premiumtools") return <PremiumTools />;
 
-    // 3. MIT Page
-    if (activePage === "mit") {
-      return (
-        <div className="relative w-full max-w-5xl mx-auto text-center py-4 animate-fade-in">
-             <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
-             <div className="relative z-10">
-               <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight whitespace-nowrap">
-                 MIT : <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">Multi-Agent Intelligent Analyst</span>
-               </h1>
-               <p className="text-gray-400 text-lg md:text-xl mb-12 max-w-2xl mx-auto tracking-tight whitespace-nowrap">
-                 Multi-agent AI system that debates, validates risk, and delivers objective trading insights.
-               </p>
-               <div className="relative group mx-auto max-w-4xl mb-12">
-                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                 <div className="relative bg-slate-900 border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
-                   <div className="bg-slate-800/50 px-4 py-2 flex items-center gap-2 border-b border-white/5">
-                     <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
-                     <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
-                     <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
-                   </div>
-                   <div className="aspect-video w-full bg-slate-900 relative group">
-                     <img src={CHART_IMAGE_URL} alt="Chart Preview" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition duration-700 ease-in-out" />
-                   </div>
-                 </div>
-               </div>
-               <button onClick={() => navigate("/member-register")} className="px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold shadow-[0_0_20px_rgba(6,182,212,0.5)] cursor-pointer">
-                 Start Using Tool
-               </button>
-             </div>
-           </div>
-      );
-    }
+    // 3. (ลบส่วน Logic แสดงผลหน้า MIT ออกไปแล้ว)
 
     // 4. ✅ Tools Rendering (Render แบบ Dynamic ตาม Map)
-    // ตรงนี้จะทำให้ทุกไฟล์เปิดได้เหมือน StockFortuneTeller ครับ
     const ToolComponent = TOOL_COMPONENTS[activePage];
     if (ToolComponent) {
       return <ToolComponent />;
@@ -202,7 +166,6 @@ export default function Dashboard({ initialPage }) {
           if (page === "home") setActivePage("preview-projects");
           else setActivePage(page);
         }}
-        // ต้องแน่ใจว่า id ที่ส่งมา ตรงกับ key ใน TOOL_COMPONENTS (fortune, petroleum, etc.)
         openProject={(p) => setActivePage(p.id)} 
       />
 
