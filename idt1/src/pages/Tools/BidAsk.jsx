@@ -525,9 +525,31 @@ const [endTime, setEndTime] = useState("00:00");
 
   // ===== TIME HELPERS =====
   const toSeconds = (time) => {
+    if (!time || !time.includes(":")) return 0;
+
     const [h, m] = time.split(":").map(Number);
+    if (isNaN(h) || isNaN(m)) return 0;
+
     return h * 3600 + m * 60;
   };
+
+  useEffect(() => {
+    const startSec = toSeconds(startTime);
+    const endSec = toSeconds(endTime);
+
+    if (endSec <= startSec) {
+      setCurrentTime("00:00:00");
+      return;
+    }
+
+    const total = endSec - startSec;
+    const percent = Number(sliderValue) || 0;
+
+    const current = startSec + (percent / 100) * total;
+
+    setCurrentTime(toHHMMSS(Math.floor(current)));
+
+  }, [sliderValue, startTime, endTime]);
 
   const toHHMMSS = (seconds) => {
     const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
@@ -540,9 +562,12 @@ const [endTime, setEndTime] = useState("00:00");
   useEffect(() => {
     const startSec = toSeconds(startTime);
     const endSec = toSeconds(endTime);
+
+    if (endSec <= startSec) return; // กันช่วงเวลาไม่ถูกต้อง
+
     const total = endSec - startSec;
 
-    const current = startSec + (sliderValue / 100) * total;
+    const current = startSec + (percent / 100) * total;
     setCurrentTime(toHHMMSS(Math.floor(current)));
 
   }, [sliderValue, startTime, endTime]);
