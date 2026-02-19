@@ -493,8 +493,8 @@ export default function RubberThai() {
               ←
             </button>
 
-           {/* CENTER SYMBOL */}
-            <div className="absolute left-1/2 -translate-x-1/2">
+           {/* LEFT SYMBOL */}
+          <div className="relative">
 
               <div className="relative w-64">
 
