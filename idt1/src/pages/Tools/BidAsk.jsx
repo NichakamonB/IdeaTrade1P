@@ -510,9 +510,12 @@ function ChartCard({ title }) {
 }
 
 function ReplayPanel() {
+const [symbol, setSymbol] = useState("");
+const [date, setDate] = useState("");
+const [hasSearched, setHasSearched] = useState(false);
 
-const [startTime, setStartTime] = useState("00:00");
-const [endTime, setEndTime] = useState("00:00");
+const [startTime, setStartTime] = useState("09:00");
+const [endTime, setEndTime] = useState("16:00");
 
   const [sliderValue, setSliderValue] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -534,22 +537,23 @@ const [endTime, setEndTime] = useState("00:00");
   };
 
   useEffect(() => {
-    const startSec = toSeconds(startTime);
-    const endSec = toSeconds(endTime);
 
-    if (endSec <= startSec) {
-      setCurrentTime("00:00:00");
-      return;
-    }
+  const startSec = toSeconds(startTime);
+  const endSec = toSeconds(endTime);
 
-    const total = endSec - startSec;
-    const percent = Number(sliderValue) || 0;
+  if (endSec <= startSec) {
+    setCurrentTime("00:00:00");
+    return;
+  }
 
-    const current = startSec + (percent / 100) * total;
+  const total = endSec - startSec;
+  const percent = Number(sliderValue) || 0;
 
-    setCurrentTime(toHHMMSS(Math.floor(current)));
+  const current = startSec + (percent / 100) * total;
 
-  }, [sliderValue, startTime, endTime]);
+  setCurrentTime(toHHMMSS(Math.floor(current)));
+
+}, [sliderValue, startTime, endTime]);
 
   const toHHMMSS = (seconds) => {
     const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
@@ -557,21 +561,7 @@ const [endTime, setEndTime] = useState("00:00");
     const s = String(seconds % 60).padStart(2, "0");
     return `${h}:${m}:${s}`;
   };
-
-  // ===== Sync slider -> time =====
-  useEffect(() => {
-    const startSec = toSeconds(startTime);
-    const endSec = toSeconds(endTime);
-
-    if (endSec <= startSec) return; // กันช่วงเวลาไม่ถูกต้อง
-
-    const total = endSec - startSec;
-
-    const current = startSec + (percent / 100) * total;
-    setCurrentTime(toHHMMSS(Math.floor(current)));
-
-  }, [sliderValue, startTime, endTime]);
-
+  
   // ===== Play system =====
   useEffect(() => {
 
@@ -593,8 +583,7 @@ const [endTime, setEndTime] = useState("00:00");
 
   const generateOrderBook = (timePercent) => {
 
-  const basePrice = 72 - (timePercent * 0.02); // ราคาค่อย ๆ ลดตามเวลา
-
+  const basePrice = 72 - (timePercent * 0.02);
   const rows = [];
 
   for (let i = 0; i < 10; i++) {
@@ -616,14 +605,24 @@ const [endTime, setEndTime] = useState("00:00");
   return rows;
 };
 
-useEffect(() => {
-  setOrderBook(generateOrderBook(0));
-}, []);
+const generateEmptyOrderBook = () => {
+  const rows = [];
 
-  useEffect(() => {
-  const newBook = generateOrderBook(sliderValue);
-  setOrderBook(newBook);
-}, [sliderValue]);
+  for (let i = 0; i < 10; i++) {
+    rows.push({
+      bidVol: 0,
+      bid: "0.00",
+      ask: "0.00",
+      askVol: 0
+    });
+  }
+
+  return rows;
+};
+
+useEffect(() => {
+  setOrderBook(generateEmptyOrderBook());
+}, []);
 
   return (
     <div className="bg-[#111827] border border-slate-700 rounded-xl overflow-hidden">
@@ -634,11 +633,31 @@ useEffect(() => {
         <div className="grid grid-cols-3 gap-3 mb-3 text-xs text-slate-400">
           <div>
             <div>Symbol</div>
-            <input className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded" defaultValue="DELTA"/>
+            <input
+              value={symbol}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSymbol(value);
+
+                // ถ้ามี symbol → set วันที่วันนี้
+                if (value.trim() !== "") {
+                  const today = new Date().toISOString().split("T")[0];
+                  setDate(today);
+                } else {
+                  setDate("");
+                }
+              }}
+              className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded"
+            />
           </div>
           <div>
             <div>Date</div>
-            <input type="date" className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded"/>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded"
+            />
           </div>
           <div>
             <div>Speed</div>
@@ -667,7 +686,20 @@ useEffect(() => {
               className="w-full bg-[#111827] border border-slate-600 px-2 py-1 rounded"
             />
           </div>
-          <button className="bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-semibold text-white">
+          <button
+            onClick={() => {
+              if (symbol.trim() === "") {
+                setHasSearched(false);
+                setOrderBook(generateEmptyOrderBook());
+                return;
+              }
+
+              setHasSearched(true);
+              setSliderValue(0); // รีเซ็ต slider ตอน search
+              setOrderBook(generateOrderBook(0));
+            }}
+            className="bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-semibold text-white"
+          >
             SEARCH
           </button>
         </div>
@@ -677,52 +709,17 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* SLIDER */}
-    <div className="px-4 py-3 bg-[#0f172a] border-t border-slate-700">
-
-      <div className="flex items-center gap-4">
-
-        {/* RANGE BAR */}
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={sliderValue}
-          onChange={(e) => setSliderValue(e.target.value)}
-          className="flex-1 h-[3px] appearance-none bg-slate-600 rounded-full 
-                    [&::-webkit-slider-thumb]:appearance-none
-                    [&::-webkit-slider-thumb]:w-4
-                    [&::-webkit-slider-thumb]:h-4
-                    [&::-webkit-slider-thumb]:bg-yellow-400
-                    [&::-webkit-slider-thumb]:rounded-full
-                    [&::-webkit-slider-thumb]:cursor-pointer"
-        />
-
-        {/* PLAY BUTTON */}
-        <button
-          onClick={() => setIsPlaying(!isPlaying)}
-          className="w-7 h-7 flex items-center justify-center bg-yellow-400 hover:bg-yellow-300 rounded-full text-black text-xs font-bold transition"
-        >
-          {isPlaying ? "❚❚" : "▶"}
-        </button>
-
-      </div>
-
-    </div>
-
       {/* ORDER BOOK */}
       <div className="bg-[#0b111a]">
-
         {orderBook.map((row, i) => (
-    <OrderRow
-      key={i}
-      bidVol={row.bidVol.toLocaleString()}
-      bid={row.bid}
-      ask={row.ask}
-      askVol={row.askVol.toLocaleString()}
-    />
-  ))}
-
+          <OrderRow
+            key={i}
+            bidVol={row.bidVol.toLocaleString()}
+            bid={row.bid}
+            ask={row.ask}
+            askVol={row.askVol.toLocaleString()}
+          />
+        ))}
         {/* TOTAL ROW */}
          <div className="grid grid-cols-4 h-[36px] items-center border-t border-slate-700 bg-[#111827] text-[12px] font-semibold">
 
@@ -744,6 +741,39 @@ useEffect(() => {
 
         </div>
       </div>
+      
+      {/* SLIDER */}
+      <div className="px-4 py-3 bg-[#0f172a] border-t border-slate-700">
+
+        <div className="flex items-center gap-4">
+
+          {/* RANGE BAR */}
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={sliderValue}
+            onChange={(e) => setSliderValue(e.target.value)}
+            className="flex-1 h-[3px] appearance-none bg-slate-600 rounded-full 
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:w-4
+                      [&::-webkit-slider-thumb]:h-4
+                      [&::-webkit-slider-thumb]:bg-yellow-400
+                      [&::-webkit-slider-thumb]:rounded-full
+                      [&::-webkit-slider-thumb]:cursor-pointer"
+          />
+
+          {/* PLAY BUTTON */}
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="w-7 h-7 flex items-center justify-center bg-yellow-400 hover:bg-yellow-300 rounded-full text-black text-xs font-bold transition"
+          >
+            {isPlaying ? "❚❚" : "▶"}
+          </button>
+
+        </div>
+
+      </div>
 
       {/* STATS */}
       <div className="grid grid-cols-2 gap-4 p-4 border-t border-slate-700 bg-[#0f172a]">
@@ -758,18 +788,28 @@ useEffect(() => {
 function OrderRow({ bidVol, bid, ask, askVol }) {
 
   const maxVolume = 500000;
-  const bidWidth = (parseInt(bidVol.replace(/,/g, "")) / maxVolume) * 100;
-  const askWidth = (parseInt(askVol.replace(/,/g, "")) / maxVolume) * 100;
+  const bidNumber = parseInt(bidVol.replace(/,/g, "")) || 0;
+  const askNumber = parseInt(askVol.replace(/,/g, "")) || 0;
+
+  const bidWidth = bidNumber > 0
+    ? (bidNumber / maxVolume) * 100
+    : 0;
+
+  const askWidth = askNumber > 0
+    ? (askNumber / maxVolume) * 100
+    : 0;
 
   return (
     <div className="grid grid-cols-4 items-center text-[12px] h-[32px] border-b border-slate-800 relative">
 
       {/* BID VOL */}
       <div className="relative text-right pr-3 text-slate-300 font-medium overflow-hidden">
-        <div
-          className="absolute right-0 top-0 h-full bg-blue-900/60"
-          style={{ width: `${bidWidth}%` }}
-        />
+        {bidNumber > 0 && (
+          <div
+            className="absolute right-0 top-0 h-full bg-blue-900/60"
+            style={{ width: `${bidWidth}%` }}
+          />
+        )}
         <span className="relative z-10">{bidVol}</span>
       </div>
 
@@ -785,10 +825,12 @@ function OrderRow({ bidVol, bid, ask, askVol }) {
 
       {/* ASK VOL */}
       <div className="relative text-left pl-3 text-slate-300 font-medium overflow-hidden">
-        <div
-          className="absolute left-0 top-0 h-full bg-red-900/60"
-          style={{ width: `${askWidth}%` }}
-        />
+        {askNumber > 0 && (
+          <div
+            className="absolute left-0 top-0 h-full bg-red-900/60"
+            style={{ width: `${askWidth}%` }}
+          />
+        )}
         <span className="relative z-10">{askVol}</span>
       </div>
 
